@@ -1,9 +1,13 @@
-import { cors, CORS } from "../..";
+import { CORS } from "../..";
 
 // Parse CORS headers
-const headers: CORS.Headers = cors({
+const cors = new CORS({
     allowMethods: ["GET", "POST", "PUT", "DELETE"],
     allowOrigins: ["example.com", "localhost:3000", "localhost:8080"],
-}, "localhost:8080");
+    maxAge: 24 * 3600 * 1000,
+    exposeHeaders: "Set-Cookie",
+    allowCredentials: true
+});
 
-console.log(headers);
+// Check origin "example.com"
+console.log(cors.check("example.com"));

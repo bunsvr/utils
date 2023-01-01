@@ -1,4 +1,16 @@
+declare global {
+    interface ResponseInit<T = any> {
+        /**
+         * The response body for response() method
+         */
+        body?: T;
+    }
+}
+
 function toBody(res: any): BodyInit {
+    if (typeof res === "undefined")
+        return ""; 
+
     if (typeof res !== "object")
         return String(res);
 
@@ -21,6 +33,6 @@ function toBody(res: any): BodyInit {
  * Return a response with the corresponding response init
  * @param res The response object
  */
-export function response<T = any>(res: T, init?: ResponseInit) {
-    return new Response(toBody(res), init);
+export function response<T = any>(init: ResponseInit<T>) {
+    return new Response(toBody(init.body), init);
 };

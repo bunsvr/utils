@@ -5,9 +5,11 @@ const app = new App();
 
 // Serve the public directory
 app.use(async request => response({
-    url: request.url,
-    headers: request.headers,
-    method: request.method
+    body: {
+        url: request.url,
+        headers: request.headers,
+        method: request.method
+    }
 }));
 
 // Serve using Bun

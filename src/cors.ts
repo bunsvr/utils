@@ -6,7 +6,7 @@ export type RequestMethod = 'ACL' | 'BIND' | 'CHECKOUT' | 'CONNECT' | 'COPY' | '
 /**
  * CORS types
  */
-export namespace CORS {
+declare namespace CORS {
     /**
      * CORS Options
      */
@@ -55,43 +55,65 @@ function setHeader(headers: object, name: string, value: string | string[]) {
     headers[name] = value.join(", ");
 }
 
-/**
- * Parse CORS options
- * @param options The CORS options
- * @param requestOrigin Current request origin
- * @returns The CORS Headers
- */
-export function cors(options: CORS.Options, requestOrigin: string) {
-    const headers: CORS.Headers = {};
+class CORS {
+    /**
+     * All CORS headers exclude "Access-Control-Allow-Origin"
+     */
+    readonly headers: CORS.Headers;
 
-    if (options.maxAge)
-        headers["Access-Control-Max-Age"] = String(options.maxAge);
-    if (options.allowCredentials)
-        headers["Access-Control-Allow-Credentials"] = "true";
+    /**
+     * Create an object to get CORS header
+     * @param options CORS options
+     */
+    constructor(public readonly options: CORS.Options) {
+        const headers: CORS.Headers = {};
 
-    if (options.allowHeaders)
-        setHeader(headers, "Access-Control-Allow-Headers", options.allowHeaders);
-    if (options.exposeHeaders)
-        setHeader(headers, "Access-Control-Expose-Headers", options.exposeHeaders);
-    if (options.allowMethods)
-        setHeader(headers, "Access-Control-Allow-Methods", options.allowMethods);
+        if (options.maxAge)
+            headers["Access-Control-Max-Age"] = String(options.maxAge);
+        if (options.allowCredentials)
+            headers["Access-Control-Allow-Credentials"] = "true";
 
-    // Set the header value
-    let value: string;
-    const origins = options.allowOrigins;
-    if (Array.isArray(origins)) {
-        if (origins.includes(requestOrigin))
-            value = requestOrigin;
-        else
-            value = origins[0] || "";
+        if (options.allowHeaders)
+            setHeader(headers, "Access-Control-Allow-Headers", options.allowHeaders);
+        if (options.exposeHeaders)
+            setHeader(headers, "Access-Control-Expose-Headers", options.exposeHeaders);
+        if (options.allowMethods)
+            setHeader(headers, "Access-Control-Allow-Methods", options.allowMethods);
+
+        this.headers = Object.seal(headers);
     }
-    else
-        value = origins as string;
 
-    // If value is not all origin
-    if (value !== "*")
-        headers["Vary"] = "Origin";
+    /**
+     * Return CORS headers including "Access-Control-Allow-Origin"
+     * @param requestOrigin The origin to check
+     * @returns The CORS headers
+     */
+    check(requestOrigin: string) {
+        const headers = JSON.parse(JSON.stringify(this.headers)) as CORS.Headers;
 
-    headers["Access-Control-Allow-Origin"] = value;
-    return headers;
+        const origins = this.options.allowOrigins;
+        if (!origins)
+            return headers;
+
+        // Allow origins value
+        let value: string;
+
+        if (Array.isArray(origins)) {
+            if (origins.includes(requestOrigin))
+                value = requestOrigin;
+            else
+                value = origins[0] || "";
+        }
+        else
+            value = origins;
+
+        // If value is not all origin set the "Vary" header
+        if (value !== "*")
+            headers["Vary"] = "Origin";
+
+        headers["Access-Control-Allow-Origin"] = value;
+        return headers;
+    }
 }
+
+export { CORS };
