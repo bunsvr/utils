@@ -1,3 +1,15 @@
+function getHeader(value: CSP.OptionValue, name: string) {
+    if (Array.isArray(value))
+        value = value.join(" ");
+
+    if (value)
+        value = name + " " + value;
+    else if (value !== false)
+        value = name;
+
+    return value + "; ";
+}
+
 /**
  * Content security policy namespace
  */
@@ -5,24 +17,60 @@ export namespace CSP {
     /**
      * Directive src value
      */
-    export type SrcValue = boolean | string | string[];
+    export type OptionValue = boolean | string | string[];
 
     /**
      * Fetch directive
      */
-    export type FetchDirective = "child" | "connect" | "font" | "frame" | "img" | "manifest" | "media" | "object" | "prefetch" | "script" | "style" | "worker" | "sandbox";
+    export type FetchDirective = "child" | "connect" | "font" | "frame" | "img" | "manifest" | "media" | "object" | "prefetch" | "script" | "style" | "worker";
 
     /**
      * All directives 
      */
     export interface Options {
-        readonly src: {
-            [key in FetchDirective]?: SrcValue;
+        /**
+         * All options that started with src
+         */
+        readonly src?: {
+            [key in FetchDirective]?: OptionValue;
         } & {
-            [key: string]: SrcValue;
+            [key: string]: OptionValue;
         }
 
-        report?: string;
+        /**
+         * Enables a sandbox for the requested resource
+         */
+        sandbox?: OptionValue;
+
+        /**
+         * Defines valid sources that can be used as an HTML `<form>` action.
+         */
+        form?: OptionValue;
+
+        /**
+         * Defines valid sources for embedding the resource using `<frame>`, `<object>`, `<embed>`.
+         */
+        frame?: OptionValue;
+
+        /**
+         * Defines valid MIME types for plugins invoked via <object> and <embed>.
+         */
+        plugin?: OptionValue;
+
+        /**
+         * Defines a set of allowed URLs which can be used in the `src` attribute of a HTML `base` tag.
+         */
+        uri?: OptionValue;
+
+        /**
+         * Report URI when policy violated
+         */
+        report?: OptionValue;
+
+        /**
+         * Restricts the URLs that the document may navigate to by any means.
+         */
+        navigate?: OptionValue;
     }
 
     /**
@@ -32,25 +80,32 @@ export namespace CSP {
         if (!opts)
             return "default-src 'self'";
 
-        let headerValue = "", value: SrcValue;
-        const reportURI = opts.report;
+        let headerValue = "";
 
-        for (const name in opts.src) {
-            value = opts.src[name];
+        if (opts.src)
+            for (const name in opts.src)
+                headerValue += getHeader(opts.src[name], name + "-src");
 
-            if (Array.isArray(value))
-                value = value.join(" ");
+        if (opts.sandbox)
+            headerValue += getHeader(opts.sandbox, "sandbox");
 
-            if (value)
-                headerValue += name + " " + value;
-            else if (value !== false)
-                headerValue += name;
+        if (opts.form)
+            headerValue += getHeader(opts.form, "form-action");
 
-            headerValue += "; ";
-        }
+        if (opts.frame)
+            headerValue += getHeader(opts.frame, "frame-ancestors");
 
-        if (reportURI)
-            headerValue += `; report-uri ${reportURI}; report-to ${reportURI}`;
+        if (opts.plugin)
+            headerValue += getHeader(opts.plugin, "plugin-types");
+
+        if (opts.uri)
+            headerValue += getHeader(opts.uri, "base-uri");
+
+        if (opts.report)
+            headerValue += `report-uri ${opts.report}; report-to ${opts.report}; `;
+
+        if (opts.navigate)
+            headerValue += getHeader(opts.navigate, "navigate-to");
 
         return headerValue;
     }
