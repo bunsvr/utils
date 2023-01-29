@@ -1,6 +1,6 @@
 {
   "name": "@stricjs/utils",
-  "version": "0.0.3",
+  "version": "1.0.0",
   "repository": {
     "url": "https://github.com/bunsvr/utils"
   },
@@ -9,7 +9,7 @@
     "bun-types": "^0.4.0",
     "esbuild": "^0.16.10",
     "typescript": "^4.9.4",
-    "@stricjs/core": "^1.0.0"
+    "@stricjs/core": "^1.0.1"
   },
   "description": "StricJS utilities",
   "scripts": {
@@ -20,5 +20,8 @@
   "typedoc": {
     "entryPoint": "./src/index.ts",
     "displayName": "@stricjs/utils"
+  },
+  "dependencies": {
+    "path-to-regexp": "^6.2.1"
   }
 }

@@ -112,6 +112,7 @@ class CORS {
             headers["Vary"] = "Origin";
 
         headers["Access-Control-Allow-Origin"] = value;
+        
         return headers;
     }
 }

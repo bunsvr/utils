@@ -1,4 +1,4 @@
-import { Middleware, App as CoreApp } from "@bunsvr/core";
+import { Middleware, App as CoreApp } from "@stricjs/core";
 import { file } from "bun";
 
 /**
@@ -8,7 +8,7 @@ import { file } from "bun";
  * @returns A middleware
  */
 export function stream<App extends CoreApp, RequestData = any>(des: any, options?: BlobPropertyBag): Middleware<App, RequestData> {
-    return async () => new Response(file(des, options));
+    return () => new Response(file(des, options));
 };
 
 export * from "./response";

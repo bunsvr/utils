@@ -26,7 +26,7 @@ function toBody(res: any): BodyInit {
     if (Object.getPrototypeOf(res).toString === Object.prototype.toString)
         return JSON.stringify(res);
 
-    return res.toString();
+    return String(res);
 };
 
 /**
