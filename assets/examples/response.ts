@@ -1,4 +1,4 @@
-import { App } from "@bunsvr/core";
+import { App } from "@stricjs/core";
 import { response } from "../..";
 
 const app = new App();
