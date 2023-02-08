@@ -20,17 +20,17 @@ const urlSlicer = /(?:\w+:)?\/\/[^\/]+([^?]+)/;
  * @param options File loading options
  * @returns A middleware
  */
-export function stream<T = any>(des: string, options?: BlobPropertyBag): Middleware<T> {
+export function stream<T = any>(des: string, options?: BlobPropertyBag & ResponseInit): Middleware<T> {
     if (!existsSync(des))
         throw new Error("Path does not exists");
     
     return isFile(des) 
-        ? () => new Response(file(des, options))
+        ? () => new Response(file(des, options), options)
         : async req => {
             const path = join(des, urlSlicer.exec(req.url)[1]);
 
             if (existsSync(path) && await isFileAsync(path))
-                return new Response(file(path, options));
+                return new Response(file(path, options), options);
         }
 };
 
