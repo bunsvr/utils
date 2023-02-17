@@ -36,4 +36,5 @@ export function stream<T = any>(des: string, options?: BlobPropertyBag & Respons
 
 export * from "./response";
 export * from "./cors";
+export * from "./parser";
 export * from "./csp";
