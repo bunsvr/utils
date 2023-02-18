@@ -1,5 +1,5 @@
 const path = /(?:\w+:)?\/\/[^\/]+([^?]+)/;
-const query = /\?(.*)/;
+const query = /\?(.*?)(?=#|$)/;
 const scheme = /^([a-z]+):\/\//;
 const hostname = /^[a-z]+:\/\/([^\/:]+)/;
 const port = /^[a-z]+:\/\/[^\/:]+:(\d+)/;
