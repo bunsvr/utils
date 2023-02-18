@@ -89,30 +89,23 @@ class CORS {
      * @returns The CORS headers
      */
     check(requestOrigin: string) {
-        const headers = JSON.parse(JSON.stringify(this.headers)) as CORS.Headers;
+        const headers = { ...this.headers } as CORS.Headers;
 
         const origins = this.options.allowOrigins;
-        if (!origins)
+        if (!origins || !origins[0])
             return headers;
 
-        // Allow origins value
-        let value: string;
-
-        if (Array.isArray(origins)) {
-            if (origins.includes(requestOrigin))
-                value = requestOrigin;
-            else
-                value = origins[0] || "";
-        }
-        else
-            value = origins;
-
         // If value is not all origin set the "Vary" header
-        if (value !== "*")
+        if ((
+            // Set allow origins
+            headers["Access-Control-Allow-Origin"] = 
+                Array.isArray(origins)
+                    // If origins is an array
+                    ? (origins.includes(requestOrigin) ? requestOrigin : "")
+                    : origins
+        ) !== "*")
             headers["Vary"] = "Origin";
 
-        headers["Access-Control-Allow-Origin"] = value;
-        
         return headers;
     }
 }
