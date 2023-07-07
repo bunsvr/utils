@@ -1,0 +1,14 @@
+# Git
+.gitignore
+
+# Packages
+node_modules
+bun.lockb
+
+# Development
+src
+examples
+tsconfig.json
+typedoc.json
+tests
+build.ts
