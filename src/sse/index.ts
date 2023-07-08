@@ -79,11 +79,11 @@ function createHandler(sse: SSE) {
         Object.assign(d, a.options);
 
         return function(r) {
-            const s = r.signal;
             if (r.headers.get(v) === t) return new Response(
                 new ReadableStream({
                     type, ${isHandlerAsync ? 'async ' : ''}pull(c) {
                         r.controller = c;
+                        const s = r.signal;
                         while (!s.aborted) ${isHandlerAsync ? 'await ' : ''}h(r);
                         ${abortStatement};
                     }

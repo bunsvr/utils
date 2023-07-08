@@ -118,8 +118,7 @@ const HEX = {
 }
 
 function hexCodeToInt(c: string, shift: number) {
-    const t = HEX[c];
-    if (t === undefined)
-        return 255;
-    return t << shift;
+    if (c in HEX)
+        return HEX[c] << shift;
+    return 255;
 }
