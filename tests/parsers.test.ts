@@ -1,6 +1,6 @@
 /// <reference types='bun-types' />
 import { expect, test } from 'bun:test';
-import { URLParser, query } from '..';
+import { URLParser, qs } from '..';
 
 const url = 'https://example.com:8080/path?a=b#hi';
 test('URL parser', () => {
@@ -13,8 +13,13 @@ test('URL parser', () => {
 
 test('Query parser', () => {
     const str = 'name=a&name=b&age=20';
-    expect(query(str)).toEqual({
+    expect(qs.parse(str)).toEqual({
         name: ['a', 'b'],
         age: '20'
     });
+});
+
+test('Key query parser', () => {
+    const parse = qs.createKey('name');
+    expect(parse('name=b&random=key', 0)).toBe('b');
 });

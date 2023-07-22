@@ -73,7 +73,16 @@ function oldParse<T extends Record<string, any> = Record<string, string | string
 
 const inputStr = 'name=Reve&age=15&hobby=coding&hobby=music&hobby=games&message=hi%20there&areallylongkeywithalongvalueaswell=thisisareallylongvalueofthislongkey';
 
-bench('Old', () => oldParse(inputStr));
-bench('New', () => newParse(inputStr));
+bench('Old parser', () => oldParse(inputStr));
+bench('New parser', () => newParse(inputStr));
 
-run()
+bench('Create empty object', () => {
+    return {};
+});
+function E() {};
+E.prototype = Object.create(null);
+bench('Create empty object using constructor', () => {
+    return new E;
+});
+
+run();
