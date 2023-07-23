@@ -4,6 +4,11 @@ const plusRegex = /\+/g;
 function E() {}
 E.prototype = Object.create(null);
 
+type FixedSizeArray<N extends number, T> = N extends 0 ? never[] : {
+    0: T;
+    length: N;
+} & ReadonlyArray<T>;
+
 export namespace qs {
     /**
      * Parse a query
@@ -73,21 +78,52 @@ export namespace qs {
      * A query parser function
      */
     export interface Parser<T> {
-        (url: string, startIndex: number): T | null; 
+        (url: string, startIndex: number): T; 
     }
 
     /**
-     * Create a parser that only search for a specific key in the query
+     * Create a parser that only search the first value of a specific key in the query.
+     *
+     * Note that the value is not decoded so you need to manually decode using `decodeURIComponent` if needed
      */
-    export function createKey(key: string): Parser<string> {
-        if (typeof key !== 'string') return null;
+    export function trackKey(key: string): Parser<string | null>;
 
-        const body = "const l=k.length;" 
-            + "return function(u,s)" 
-            + "{const i=u.indexOf(k,s);if(i===-1)return null;" 
-            + "const j=u.indexOf('&',i);return j===-1?u.substring(i+l):u.substring(i+l,j)}";
+    /**
+     * Create a parser that only search the first value of a specific key in the query.
+     *
+     * Note that the value is not decoded so you need to manually decode using `decodeURIComponent` if needed
+     */
+    export function trackKey(key: string, maxValues: 1): Parser<string | null>;
 
-        return Function('k', body)(encodeURIComponent(key) + '=');
+    /**
+     * Create a parser that only search values of a specific key in the query.
+     *
+     * Note that the value is not decoded so you need to manually decode using `decodeURIComponent` if needed
+     */
+    export function trackKey<T extends number>(key: string, maxValues: T): Parser<FixedSizeArray<T, string>>;
+
+    export function trackKey<T extends number = 1>(
+        key: string, 
+        maxValues: T = 1 as any
+    ): Parser<string> | Parser<FixedSizeArray<T, string>> {
+        key = encodeURIComponent(key) + '=';
+
+        let body = 'const l=k.length;return function(u,s)', noMaxVal = maxValues === 1;
+        body += noMaxVal 
+            ? (
+                '{let i=u.indexOf(k,s);if(i===-1)return null;' 
+                + `i+=l;const j=u.indexOf('&',i);return j===-1?u.substring(i):u.substring(i,j)}`
+            ) : (
+                '{const r=new Array(m);let i=0,j=u.indexOf(k,s),e;'
+                + `while(j!==-1&&i<m){`
+                + `j+=l;e=u.indexOf('&',j);` 
+                + `if(e===-1){r[i]=u.substring(j);return r;}` 
+                + `r[i]=u.substring(j,e);++i;j=u.indexOf(k,e+1);`
+                + `}`
+                + 'return r;}'
+            );
+
+        return (noMaxVal ? Function('k', body) : Function('k', 'm', body))(key, maxValues);
     }
 }
 

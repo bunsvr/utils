@@ -20,6 +20,13 @@ test('Query parser', () => {
 });
 
 test('Key query parser', () => {
-    const parse = qs.createKey('name');
+    const parse = qs.trackKey('name');
     expect(parse('name=b&random=key', 0)).toBe('b');
+    expect(parse('a=d?name=b&random=key', 0)).toBe('b');
+    expect(parse('a=d?name=b', 0)).toBe('b');
 });
+
+test('Key query parser multiple values', () => {
+    const parse = qs.trackKey('name', 2);
+    expect(parse('name=a&o=a&name=b', 0)).toEqual(['a', 'b']);
+})
