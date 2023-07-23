@@ -86,37 +86,37 @@ export namespace qs {
      *
      * Note that the value is not decoded so you need to manually decode using `decodeURIComponent` if needed
      */
-    export function trackKey(key: string): Parser<string | null>;
+    export function searchKey(key: string): Parser<string | null>;
 
     /**
      * Create a parser that only search the first value of a specific key in the query.
      *
      * Note that the value is not decoded so you need to manually decode using `decodeURIComponent` if needed
      */
-    export function trackKey(key: string, maxValues: 1): Parser<string | null>;
+    export function searchKey(key: string, maxValues: 1): Parser<string | null>;
 
     /**
      * Create a parser that only search values of a specific key in the query.
      *
      * Note that the value is not decoded so you need to manually decode using `decodeURIComponent` if needed
      */
-    export function trackKey<T extends number>(key: string, maxValues: T): Parser<FixedSizeArray<T, string>>;
+    export function searchKey<T extends number>(key: string, maxValues: T): Parser<FixedSizeArray<T, string>>;
 
-    export function trackKey<T extends number = 1>(
+    export function searchKey<T extends number = 1>(
         key: string, 
         maxValues: T = 1 as any
     ): Parser<string> | Parser<FixedSizeArray<T, string>> {
         key = encodeURIComponent(key) + '=';
 
-        let body = 'const l=k.length;return function(u,s)', noMaxVal = maxValues === 1;
+        let body = 'return function(u,s)', noMaxVal = maxValues === 1, len = key.length;
         body += noMaxVal 
             ? (
                 '{let i=u.indexOf(k,s);if(i===-1)return null;' 
-                + `i+=l;const j=u.indexOf('&',i);return j===-1?u.substring(i):u.substring(i,j)}`
+                + `i+=${len};const j=u.indexOf('&',i);return j===-1?u.substring(i):u.substring(i,j)}`
             ) : (
                 '{const r=new Array(m);let i=0,j=u.indexOf(k,s),e;'
                 + `while(j!==-1&&i<m){`
-                + `j+=l;e=u.indexOf('&',j);` 
+                + `j+=${len};e=u.indexOf('&',j);` 
                 + `if(e===-1){r[i]=u.substring(j);return r;}` 
                 + `r[i]=u.substring(j,e);++i;j=u.indexOf(k,e+1);`
                 + `}`
