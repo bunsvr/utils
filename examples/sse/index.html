@@ -11,8 +11,7 @@
          * @param {MessageEvent} e
          */
         source.onmessage = e => {
-            console.log(e);
-            source.close();
+            console.log(e.data);
         };
     </script>
 </head>

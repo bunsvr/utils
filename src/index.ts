@@ -7,6 +7,8 @@ export * from './query';
 export * from './stream';
 export * from './sse';
 
+export * from './guard';
+
 export * from './auth/basic';
 export * from './auth/bearer';
 
