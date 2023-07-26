@@ -23,6 +23,11 @@ export interface StreamOptions extends ResponseInit {
     doParsePath?: boolean;
 
     /**
+     * Does not found handling or not
+     */ 
+    handleNotFound?: boolean
+
+    /**
      * Specify the root (plugins only)
      */
     root?: string;
@@ -36,27 +41,22 @@ export interface StreamOptions extends ResponseInit {
  */
 export function stream(des: string, options?: StreamOptions): Handler {
     des = resolve(des);
-    if (des.endsWith('/')) des = des.slice(0, -1);
+    if (!des.endsWith('/')) des += '/';
 
-    const { doParsePath = true, ...rest } = options || {};
+    const { doParsePath = true, handleNotFound = true, ...rest } = options || {};
     options = rest;
+    if (Object.keys(options).length === 0) options = null;
 
     return statSync(des).isFile()
         ? () => new Response(file(des), options)
-        : async r => {
-            // Parse path
-            if (doParsePath) {
-                const u = r.url, s = u.indexOf('/', 12), e = u.indexOf('?', s + 1);
-                // @ts-ignore
-                if (e === -1) r.path = u.substring(s);
-                // @ts-ignore
-                else r.path = u.substring(s, e);
-            }
-
-            const f = file(des + r.path);
-            if (await f.exists())
-                return new Response(f, options);
-        }
+        : new Function('f', 'd', 'o', `${handleNotFound ? 'const h={status:404};' : ''}return async function(r){${doParsePath 
+            ? "const s=r.url.indexOf('/',12)+1," 
+                + "e=r.url.indexOf('?',s);" 
+                + "r.path=e===-1?r.url.substring(s):r.url.substring(s,e);" 
+            : ''
+        }const q=f(d+r.path);return await q.exists()?new Response(q${
+            options === null ? '' : ',o'
+        }):${handleNotFound ? 'new Response(null,h)' : 'null'};}`)(file, des, options)
 };
 
 /**

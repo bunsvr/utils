@@ -1,8 +1,10 @@
 /// <reference types='bun-types' />
-import { run, bench } from 'mitata';
+import { bench, run } from 'mitata';
 
-const v = {}, o = 'object';
-bench('v === Object(v)', () => v === Object(v));
-bench('typeof', () => typeof v === o)
+const x = Math.random() ? '' : (Math.random() ? true : (Math.random() ? 0 : {})), num = 'number', str = 'string', bool = 'boolean';
+bench('Number check typeof', () => typeof x === num);
+bench('Number check ref', () => x === Number(x));
+bench('String check typeof', () => typeof x === str);
+bench('String check ref', () => x === String(x));
 
 run();

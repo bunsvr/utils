@@ -1,6 +1,7 @@
 import { stream } from "../..";
 
+const fetch = stream(import.meta.dir + '/public');
+console.log(fetch.toString())
+
 // Serve using Bun
-export default {
-    fetch: stream(import.meta.dir + '/public')
-};
+export default { fetch };

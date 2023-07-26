@@ -1,15 +1,17 @@
-import { isNumber } from "util";
-
 export namespace guard {
-    export type BasicType = 'str' | 'num' | 'bool' | 'undef' | 'nil';
-    export type OptionalBasicType = 'str?' | 'num?' | 'bool?' | 'nil?';
+    export type BasicType = 'str' | 'num' | 'bool' | 'undef' | 'nil' | 'bf';
+
+    type SuffixQuestionMark<T extends string> = `?${T}`;
+    export type OptionalBasicType = keyof {
+        [K in BasicType as SuffixQuestionMark<K>]: null
+    };
     export type ValidatorObject = BasicType | OptionalBasicType | Dict<ValidatorObject>;
 
     type InferBasic<P> = P extends 'str' ? string : (
         P extends 'num' ? number : (
             P extends 'bool' ? boolean : (
                 P extends 'undef' ? undefined : (
-                   P extends 'nil' ? null : never
+                   P extends 'nil' ? null : any
                 )
             )
         )
@@ -25,10 +27,12 @@ export namespace guard {
     const numberCheckFnName = 'n',
         strTypeName = 's',
         boolTypeName = 'b',
-        isArrayAlias = 'i',
+        defaultPropName = 'o',
+        bufferValidate = 'p',
         outerVars = `const ${strTypeName}='string',${boolTypeName}='boolean'`,
         // Insert Array.isArray and util.isNumber as arguments
-        basicArgs = [isArrayAlias,numberCheckFnName];
+        basicArgs = [numberCheckFnName, bufferValidate],
+        basicValidator = [require('node:util').isNumber, Buffer.isBuffer];
 
     const validator: { [key in BasicType | 'obj']: (p: string) => string } = {
         str: (currentPropName) => `typeof ${currentPropName}===${strTypeName}`,
@@ -37,6 +41,7 @@ export namespace guard {
         undef: (currentPropName) => `${currentPropName}===undefined`,
         nil: (currentPropName) => `${currentPropName}===null`,
         obj: (currentPropName) => `${currentPropName}===Object(${currentPropName})`,
+        bf: (currentPropName) => `${bufferValidate}(${currentPropName})`
     };
 
     function isObj(v: any): v is object {
@@ -53,14 +58,16 @@ export namespace guard {
             return vld;
         }
 
-        if (type[type.length - 1] === '?') {
+        if (type[0] === '?') {
             const parentObjEndIndex = propName.lastIndexOf('.');
 
             return `(${parentObjEndIndex === -1 
                 ? validator.undef(propName) 
                 : `!('${propName.substring(parentObjEndIndex + 1)}'in ${propName.substring(0, parentObjEndIndex)})`
-            }||${createCheck(type.slice(0, -1) as BasicType, propName)})`;
+            }||${createCheck(type.substring(1) as BasicType, propName)})`;
         }
+
+        // TODO: Compose array
 
         if ((type as BasicType) in validator)
             return validator[type as BasicType](propName);
@@ -68,16 +75,30 @@ export namespace guard {
         return null;
     }
 
-    const defaultPropName = 'o';
     /**
      * Create a request validator
      */
-    export function create<T extends ValidatorObject>(type: T): (o: any) => Infer<T> | null {
+    export function create<T extends ValidatorObject>(type: T): (o?: any) => Infer<T> | null {
         const body = `${outerVars};return function(${
             defaultPropName
         }){return ${createCheck(type, defaultPropName)}?o:null}`;
 
-        return Function(...basicArgs, body)(Array.isArray, isNumber);
+        return Function(...basicArgs, body)(...basicValidator);
     }
-}
 
+    let registeredTypes = 0;
+    /**
+     * Register a custom type
+     */
+    export function register(
+        type: string, 
+        checkFn: (value: any) => boolean
+    ) {
+        const fnName = 'v' + registeredTypes;
+        basicArgs.push(fnName);
+        validator[type] = (p: string) => `${fnName}(${p})`;
+        // @ts-ignore
+        basicValidator.push(checkFn);
+        ++registeredTypes;
+    };
+}
