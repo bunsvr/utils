@@ -41,13 +41,14 @@ export interface StreamOptions extends ResponseInit {
  */
 export function stream(des: string, options?: StreamOptions): Handler {
     des = resolve(des);
-    if (!des.endsWith('/')) des += '/';
+    const isFile =statSync(des).isFile();
+    if (!isFile && !des.endsWith('/')) des += '/';
 
     const { doParsePath = true, handleNotFound = true, ...rest } = options || {};
     options = rest;
     if (Object.keys(options).length === 0) options = null;
 
-    return statSync(des).isFile()
+    return isFile
         ? () => new Response(file(des), options)
         : new Function('f', 'd', 'o', `${handleNotFound ? 'const h={status:404};' : ''}return async function(r){${doParsePath 
             ? "const s=r.url.indexOf('/',12)+1," 

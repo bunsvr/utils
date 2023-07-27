@@ -1,4 +1,4 @@
-import { Handler, Router, Params } from "@stricjs/router";
+import { Handler, Router } from "@stricjs/router";
 
 declare global {
     interface Request {
@@ -9,26 +9,22 @@ declare global {
     }
 }
 
-interface SSEHandler<T extends string = string> {
-    /**
-     * @param request The current request
-     */
-    (request: Request<Params<T>>): any | Promise<any>;
-}
-
 /**
  * Handle SSE
  */
 export class SSE<T extends string = any> {
     constructor(public path: T, public options: ResponseInit = {}) { }
-    handler: SSEHandler<T>;
-    abortHandler: SSEHandler<T>;
+    handler: Handler<T>;
+    abortHandler: Handler<T>;
+    hasStore: boolean = false;
 
     /**
      * Use this as a router plugin
      * @param app 
      */
     plugin(app: Router) {
+        // @ts-ignore internal store
+        if (app.injects) this.hasStore = true;
         app.get(this.path, createHandler(this));
     }
 
@@ -36,7 +32,7 @@ export class SSE<T extends string = any> {
      * Register a handler to send events
      * @param handler 
      */
-    use(handler: SSEHandler<T>) {
+    use(handler: Handler<T>) {
         this.handler = handler;
         return this;
     }
@@ -44,7 +40,7 @@ export class SSE<T extends string = any> {
     /**
      * Specify an abort handler
      */
-    abort(handler: SSEHandler<T>) {
+    abort(handler: Handler<T>) {
         this.abortHandler = handler;
         return this;
     }
@@ -55,9 +51,10 @@ function isAsync(func: any) {
 }
 
 function createHandler(sse: SSE) {
+    const args = 'r' + (sse.hasStore ? ',o' : '');
     const isHandlerAsync = isAsync(sse.handler),
         abortHandlerExists = !!sse.abortHandler;
-    const abortStatement = abortHandlerExists ? 'q(r)' : 'c.close()';
+    const abortStatement = abortHandlerExists ? `q(${args})` : 'c.close()';
 
     // s: signal,
     // r: request
@@ -68,6 +65,6 @@ function createHandler(sse: SSE) {
     // s: signal
     // q: abort handler
     // t: content type
-    return Function('a', `const d={headers:{'Content-Type':'text/event-stream','Cache-Control':'no-cache','Connection':'keep-alive'}},type='direct',v='Accept',h=a.handler,t='text/event-stream'${abortHandlerExists ? ',q=a.abortHandler' : ''};Object.assign(d,a.options);return function(r){if(r.headers.get(v)===t)return new Response(new ReadableStream({type,${isHandlerAsync ? 'async ' : ''}pull(c){r.controller=c;const s=r.signal;while(!s.aborted)${isHandlerAsync ? 'await ' : ''}h(r);${abortStatement};}}),d);}`)(sse) as Handler;
+    return Function('a', `const d={headers:{'Content-Type':'text/event-stream','Cache-Control':'no-cache','Connection':'keep-alive'}},type='direct',v='Accept',h=a.handler,t='text/event-stream'${abortHandlerExists ? ',q=a.abortHandler' : ''};Object.assign(d,a.options);return function(${args}){if(r.headers.get(v)===t)return new Response(new ReadableStream({type,${isHandlerAsync ? 'async ' : ''}pull(c){r.controller=c;const s=r.signal;while(!s.aborted)${isHandlerAsync ? 'await ' : ''}h(${args});${abortStatement};}}),d);}`)(sse) as Handler;
 }
 
