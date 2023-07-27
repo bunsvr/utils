@@ -86,6 +86,6 @@ export function group(dir: string, options?: StreamOptions) {
 /**
  * Wrap the handler in a direct readable stream
  */
-export function writer(h: (req: Request, res: ReadableStreamDirectController) => any) {
-    return Function('d', `const type='direct';return function(r){return new Response(new ReadableStream({type,pull(c){d(r,c)}}))}`)(h);
+export function writer<T extends string>(h: Handler<T>): Handler<T> {
+    return Function('d', `const type='direct';return function(...a){return new Response(new ReadableStream({type,pull(c){a[0].controller=c;d(...a)}}))}`)(h);
 }

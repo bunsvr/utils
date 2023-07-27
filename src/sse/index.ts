@@ -65,6 +65,6 @@ function createHandler(sse: SSE) {
     // s: signal
     // q: abort handler
     // t: content type
-    return Function('a', `const d={headers:{'Content-Type':'text/event-stream','Cache-Control':'no-cache','Connection':'keep-alive'}},type='direct',v='Accept',h=a.handler,t='text/event-stream'${abortHandlerExists ? ',q=a.abortHandler' : ''};Object.assign(d,a.options);return function(${args}){if(r.headers.get(v)===t)return new Response(new ReadableStream({type,${isHandlerAsync ? 'async ' : ''}pull(c){r.controller=c;const s=r.signal;while(!s.aborted)${isHandlerAsync ? 'await ' : ''}h(${args});${abortStatement};}}),d);}`)(sse) as Handler;
+    return Function('a', `const d={headers:{'Content-Type':'text/event-stream','Cache-Control':'no-cache','Connection':'keep-alive'}},type='direct',v='Accept',h=a.handler,t='text/event-stream'${abortHandlerExists ? ',q=a.abortHandler' : ''};Object.assign(d,a.options);return function(${args}){if(r.headers.get(v)===t)return new Response(new ReadableStream({type,${isHandlerAsync ? 'async ' : ''}pull(c){r.controller=c;while(!r.signal.aborted)${isHandlerAsync ? 'await ' : ''}h(${args});${abortStatement};}}),d);}`)(sse) as Handler;
 }
 
