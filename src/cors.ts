@@ -67,13 +67,15 @@ class CORS {
      * Create an object to get CORS header
      * @param options CORS options
      */
-    constructor(public readonly options: CORS.Options) {
+    constructor(public readonly options: CORS.Options = {}) {
         const headers: CORS.Headers = {};
 
         if (options.maxAge)
             headers['Access-Control-Max-Age'] = String(options.maxAge);
         if (options.allowCredentials)
             headers['Access-Control-Allow-Credentials'] = 'true';
+        if (!options.allowOrigins)
+            options.allowOrigins = '*';
 
         if (options.allowHeaders)
             setHeader(headers, 'Access-Control-Allow-Headers', options.allowHeaders);
@@ -83,6 +85,33 @@ class CORS {
             setHeader(headers, 'Access-Control-Allow-Methods', options.allowMethods);
 
         this.headers = Object.seal(headers);
+        this.composeCheck();
+    }
+
+    composeCheck() {
+        let origins = this.options.allowOrigins;
+        if (origins && origins.length === 1) origins = origins[0];
+
+        const body =`const v='Access-Control-Allow-Origin'${
+            typeof origins === 'string' ? (origins === '*' 
+                ? '' 
+                : `,h0='${origins}'`
+            ) : origins.map(
+                (value, i) => `,h${i}='${value}'` 
+            ).join('')
+        };` + (origins === undefined || origins.length === 0 
+            ? `return function(){return a;};` 
+            : (origins === '*' 
+                ? `return function(r){const c={...a};c[v]=r;return c;}`
+                : `return function(r){const c={...a};${
+                    typeof origins === 'string' ? `if(r===h0)c[v]=r;` : `switch(r){${
+                        origins.map((_, i) => `case h${i}:`).join('')
+                    }c[v]=r;}`
+                }return c;}`
+            )
+        );
+
+        this.check = Function('a', body)(this.headers);
     }
 
     /**

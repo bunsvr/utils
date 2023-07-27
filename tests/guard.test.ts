@@ -52,7 +52,6 @@ test('Buffer', () => {
 
 test('Register types', () => {
     guard.register('fn', (v: any) => typeof v === 'function');
-    // @ts-ignore
     const check = guard.create('fn');
     console.log(check.toString())
 

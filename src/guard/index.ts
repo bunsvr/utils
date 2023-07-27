@@ -1,29 +1,6 @@
-export namespace guard {
-    export type BasicType = 'str' | 'num' | 'bool' | 'undef' | 'nil' | 'bf';
+export namespace guard {    
+    export type Validator = string | Dict<Validator>; 
 
-    type SuffixQuestionMark<T extends string> = `?${T}`;
-    export type OptionalBasicType = keyof {
-        [K in BasicType as SuffixQuestionMark<K>]: null
-    };
-    export type ValidatorObject = BasicType | OptionalBasicType | Dict<ValidatorObject>;
-
-    type InferBasic<P> = P extends 'str' ? string : (
-        P extends 'num' ? number : (
-            P extends 'bool' ? boolean : (
-                P extends 'undef' ? undefined : (
-                   P extends 'nil' ? null : any
-                )
-            )
-        )
-    );
-
-    type InferOptionalBasic<T> = T extends `${infer U}?` ? InferBasic<U> | undefined : never;
-    export type Infer<T> = T extends BasicType ? InferBasic<T> : (
-        T extends OptionalBasicType ? InferOptionalBasic<T> : {
-            [K in keyof T]: Infer<T[K]>       
-        }
-    );
-   
     const numberCheckFnName = 'n',
         strTypeName = 's',
         boolTypeName = 'b',
@@ -34,7 +11,7 @@ export namespace guard {
         basicArgs = [numberCheckFnName, bufferValidate],
         basicValidator = [require('node:util').isNumber, Buffer.isBuffer];
 
-    const validator: { [key in BasicType | 'obj']: (p: string) => string } = {
+    const validator: { [key: string]: (p: string) => string } = {
         str: (currentPropName) => `typeof ${currentPropName}===${strTypeName}`,
         num: (currentPropName) => `${numberCheckFnName}(${currentPropName})`,
         bool: (currentPropName) => `typeof ${currentPropName}===${boolTypeName}`,
@@ -48,7 +25,7 @@ export namespace guard {
         return v === Object(v);
     }
 
-    function createCheck(type: ValidatorObject, propName: string) {
+    function createCheck(type: Validator, propName: string) {
         let vld: string = '';
         if (isObj(type)) {
             vld += validator.obj(propName);
@@ -64,13 +41,13 @@ export namespace guard {
             return `(${parentObjEndIndex === -1 
                 ? validator.undef(propName) 
                 : `!('${propName.substring(parentObjEndIndex + 1)}'in ${propName.substring(0, parentObjEndIndex)})`
-            }||${createCheck(type.substring(1) as BasicType, propName)})`;
+            }||${createCheck(type.substring(1), propName)})`;
         }
 
         // TODO: Compose array
 
-        if ((type as BasicType) in validator)
-            return validator[type as BasicType](propName);
+        if (type in validator)
+            return validator[type](propName);
 
         return null;
     }
@@ -78,7 +55,7 @@ export namespace guard {
     /**
      * Create a request validator
      */
-    export function create<T extends ValidatorObject>(type: T): (o?: any) => Infer<T> | null {
+    export function create<T extends Validator>(type: T): <E>(o?: E) => E | null {
         const body = `${outerVars};return function(${
             defaultPropName
         }){return ${createCheck(type, defaultPropName)}?o:null}`;
