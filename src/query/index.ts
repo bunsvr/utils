@@ -78,7 +78,7 @@ export namespace qs {
      * A query parser function
      */
     export interface Parser<T> {
-        (url: string, startIndex: number): T; 
+        (req: Request): T;
     }
 
     /**
@@ -108,17 +108,17 @@ export namespace qs {
     ): Parser<string> | Parser<FixedSizeArray<T, string>> {
         key = encodeURIComponent(key) + '=';
 
-        let body = 'return function(u,s)', noMaxVal = maxValues === 1, len = key.length;
+        let body = 'return function(_)', noMaxVal = maxValues === 1, len = key.length;
         body += noMaxVal 
             ? (
-                '{let i=u.indexOf(k,s);if(i===-1)return null;' 
-                + `i+=${len};const j=u.indexOf('&',i);return j===-1?u.substring(i):u.substring(i,j)}`
+                '{let i=_.url.indexOf(k,_.query+1);if(i===-1)return null;' 
+                + `i+=${len};const j=_.url.indexOf('&',i);return j===-1?_.url.substring(i):_.url.substring(i,j)}`
             ) : (
-                '{const r=new Array(m);let i=0,j=u.indexOf(k,s),e;'
+                '{const r=new Array(m);let i=0,j=_.url.indexOf(k,_.query+1),e;'
                 + `while(j!==-1&&i<m){`
-                + `j+=${len};e=u.indexOf('&',j);` 
-                + `if(e===-1){r[i]=u.substring(j);return r;}` 
-                + `r[i]=u.substring(j,e);++i;j=u.indexOf(k,e+1);`
+                + `j+=${len};e=_.url.indexOf('&',j);` 
+                + `if(e===-1){r[i]=_.url.substring(j);return r;}` 
+                + `r[i]=_.url.substring(j,e);++i;j=_.url.indexOf(k,e+1);`
                 + `}`
                 + 'return r;}'
             );

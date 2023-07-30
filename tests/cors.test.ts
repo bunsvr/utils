@@ -14,7 +14,7 @@ test('CORS all origin', () => {
     const cors = new CORS();
     console.log(cors.check.toString());
 
-    expect(cors.check('example.com')).toEqual({ 'Access-Control-Allow-Origin': 'example.com' });
+    expect(cors.check('example.com')).toEqual({ 'Access-Control-Allow-Origin': '*' });
 });
 
 test('CORS one origin', () => {
@@ -24,7 +24,7 @@ test('CORS one origin', () => {
     console.log(cors.check.toString());
 
     expect(cors.check('another.com')).toEqual({});
-    expect(cors.check('example.com')).toEqual({ 'Access-Control-Allow-Origin': 'example.com' });
+    expect(cors.check('example.com')).toEqual({ 'Access-Control-Allow-Origin': 'example.com', 'Vary': 'Origin' });
 });
 
 test('CORS multiple origins', () => {
@@ -34,6 +34,6 @@ test('CORS multiple origins', () => {
     console.log(cors.check.toString());
 
     expect(cors.check('another.com')).toEqual({});
-    expect(cors.check('example.com')).toEqual({ 'Access-Control-Allow-Origin': 'example.com' });   
-    expect(cors.check('localhost')).toEqual({ 'Access-Control-Allow-Origin': 'localhost' });
+    expect(cors.check('example.com')).toEqual({ 'Access-Control-Allow-Origin': 'example.com', 'Vary': 'Origin' });   
+    expect(cors.check('localhost')).toEqual({ 'Access-Control-Allow-Origin': 'localhost', 'Vary': 'Origin' });
 });

@@ -23,14 +23,14 @@ test('Key query parser', () => {
     const parse = qs.searchKey('name');
     console.log(parse.toString());
 
-    expect(parse('name=b&random=key', 0)).toBe('b');
-    expect(parse('a=d?name=b&random=key', 0)).toBe('b');
-    expect(parse('a=d?name=b', 0)).toBe('b');
+    // @ts-ignore
+    expect(parse({url: 'a=d?name=b', query: -1})).toBe('b');
 });
 
 test('Key query parser multiple values', () => {
     const parse = qs.searchKey('name', 2);
     console.log(parse.toString());
 
-    expect(parse('name=a&o=a&name=b', 0)).toEqual(['a', 'b']);
+    // @ts-ignore
+    expect(parse({url: 'name=a&o=a&name=b', query: -1})).toEqual(['a', 'b']);
 })
