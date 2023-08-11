@@ -18,7 +18,7 @@ export namespace guard {
         undef: (currentPropName) => `${currentPropName}===undefined`,
         nil: (currentPropName) => `${currentPropName}===null`,
         obj: (currentPropName) => `${currentPropName}===Object(${currentPropName})`,
-        bf: (currentPropName) => `${bufferValidate}(${currentPropName})`
+        buf: (currentPropName) => `${bufferValidate}(${currentPropName})`
     };
 
     function isObj(v: any): v is object {

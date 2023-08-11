@@ -1,6 +1,6 @@
 {
   "name": "@stricjs/utils",
-  "version": "1.3.8",
+  "version": "1.3.9",
   "repository": {
     "url": "https://github.com/bunsvr/utils"
   },
@@ -10,7 +10,7 @@
     "esbuild": "^0.16.10",
     "typescript": "^4.9.4",
     "mitata": "^0.1.6",
-    "@stricjs/router": "latest",
+    "@stricjs/router": "^4.0.10",
     "buchta": "latest"
   },
   "description": "Utilities for parsing and handling requests",
@@ -19,5 +19,5 @@
   "scripts": {
     "build-test": "bun build.ts && bun test --bail",
     "microbench": "bun microbench/index.ts"
-  } 
+  }
 }

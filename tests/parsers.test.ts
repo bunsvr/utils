@@ -2,9 +2,9 @@
 import { expect, test } from 'bun:test';
 import { URLParser, qs } from '..';
 
-const url = 'https://example.com:8080/path?a=b#hi';
+const url = 'https://example.com:8080/path?a=b';
 test('URL parser', () => {
-    expect(URLParser.hash(url)).toBe('hi');
+    expect(URLParser.hash(url + '#hi')).toBe('hi');
     expect(URLParser.host(url)).toBe('example.com:8080');
     expect(URLParser.path(url)).toBe('/path');
     expect(URLParser.query(url)).toBe('a=b');

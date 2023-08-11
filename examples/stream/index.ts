@@ -1,7 +1,5 @@
-import { stream } from "../..";
+import { dir } from "../..";
+import { Router as Stric } from '@stricjs/router';
 
-const fetch = stream(import.meta.dir + '/public');
-console.log(fetch.toString())
-
-// Serve using Bun
-export default { fetch };
+export default new Stric()
+    .get('/*', dir(import.meta.dir + '/public'));

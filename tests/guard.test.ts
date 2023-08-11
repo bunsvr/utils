@@ -43,7 +43,7 @@ test('Nested', () => {
 });
 
 test('Buffer', () => {
-    const check = guard.create('?bf');
+    const check = guard.create('?buf');
     console.log(check.toString());
 
     expect(check(Buffer.allocUnsafe(1))).not.toBeNil();

@@ -57,3 +57,13 @@ export function response(serializable: any, options?: ResponseInit): () => Respo
 
     return Function(...args)(serializable, options);
 }
+
+export type BlobPart = string | Blob | BufferSource;
+export type ResponseBody = ReadableStream<any> | BlobPart | BlobPart[] | FormData | URLSearchParams;
+
+/**
+ * Prepare response options for responding
+ */
+export function writeHead(options: ResponseInit) {
+    return (body: ResponseBody) => new Response(body, options);
+}

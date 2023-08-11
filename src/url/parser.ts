@@ -20,10 +20,7 @@ export namespace URLParser {
         const s = u.indexOf('?');
         if (s === -1) return '';
 
-        const e = u.indexOf('#');
-        if (e === -1) return u.substring(s + 1);
-
-        return u.substring(s + 1, e);
+        return u.substring(s + 1);
     }
 
     /**
@@ -31,7 +28,7 @@ export namespace URLParser {
      * @param u an URL with the same format as Bun `req.url`
      */
     export function scheme(u: string) {
-        return u.substring(0, u.indexOf(':'));
+        return u.substring(0, u.indexOf(':', 2));
     }
 
     /**

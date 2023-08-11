@@ -1,37 +1,14 @@
-import { file } from 'bun';
 import { Handler, Group } from '@stricjs/router';
 import { statSync } from 'fs';
 import { resolve } from 'path';
 import searchFiles from './searchFiles';
 
-declare global {
-    interface Request {
-        /**
-         * The parsed pathname without the query
-         */
-        readonly path: string;
-    }
-}
-
-/**
- * Options for streaming files and dirs
- */
 export interface StreamOptions extends ResponseInit {
-    /**
-     * WHether to parse path or not
-     */
-    doParsePath?: boolean;
-
-    /**
-     * Does not found handling or not
-     */ 
-    handleNotFound?: boolean
-
-    /**
-     * Specify the root (plugins only)
-     */
-    root?: string;
+    doParsePath?: boolean,
+    root?: string, 
 }
+
+const file = globalThis.Bun?.file;
 
 /**
  * Serve a file 
@@ -39,25 +16,11 @@ export interface StreamOptions extends ResponseInit {
  * @param options File loading options
  * @returns A middleware
  */
-export function stream(des: string, options?: StreamOptions): Handler {
+export function stream(des: string, options?: ResponseInit): Handler {
     des = resolve(des);
-    const isFile =statSync(des).isFile();
-    if (!isFile && !des.endsWith('/')) des += '/';
+    if (!statSync(des).isFile()) throw new Error('Path must be a file. For serving directory, use watch() with wildcards instead');
 
-    const { doParsePath = true, handleNotFound = true, ...rest } = options || {};
-    options = rest;
-    if (Object.keys(options).length === 0) options = null;
-
-    return isFile
-        ? () => new Response(file(des), options)
-        : new Function('f', 'd', 'o', `${handleNotFound ? 'const h={status:404};' : ''}return async function(r){${doParsePath 
-            ? "const s=r.url.indexOf('/',12)+1," 
-                + "e=r.url.indexOf('?',s);" 
-                + "r.path=e===-1?r.url.substring(s):r.url.substring(s,e);" 
-            : ''
-        }const q=f(d+r.path);return await q.exists()?new Response(q${
-            options === null ? '' : ',o'
-        }):${handleNotFound ? 'new Response(null,h)' : 'null'};}`)(file, des, options)
+    return () => new Response(file(des), options);
 };
 
 /**
@@ -74,18 +37,25 @@ export function group(dir: string, options?: StreamOptions) {
 
     const group = new Group(root);
     for (const [relative, absolute] of searchFiles(dir)) 
-        group.get(relative, 
-            () => new Response(
-                file(absolute), 
-                options
-        ));
+        group.get(relative, () => new Response(file(absolute), options));
     
     return group;
 }
 
 /**
- * Wrap the handler in a direct readable stream
+ * Serve a directory.
+ *
+ * This function should be used with `@stricjs/router` wildcard routes
  */
-export function writer<T extends string>(h: Handler<T>): Handler<T> {
-    return Function('d', `const type='direct';return function(...a){return new Response(new ReadableStream({type,pull(c){a[0].controller=c;d(...a)}}))}`)(h);
+export function dir(des: string, options?: StreamOptions): Handler<string> {
+    des = resolve(des);
+    if (!statSync(des).isDirectory()) throw new Error('Path must be a directory');
+
+    if (des.at(-1) != '/') des += '/';
+
+    return async ctx => {
+        // @ts-ignore
+        const f = file(des + ctx.params['*']);
+        return await f.exists() ? new Response(f, options) : null;
+    }
 }
