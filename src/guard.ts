@@ -1,26 +1,54 @@
-export namespace guard {    
-    export type Validator = string | Dict<Validator>; 
-
-    const numberCheckFnName = 'n',
+export namespace guard {   
+    const numberTypeName = 'n',
         strTypeName = 's',
         objectTypeName = 'x',
         boolTypeName = 'b',
         defaultPropName = 'o',
         bufferValidate = 'p',
-        outerVars = `const ${strTypeName}='string',${boolTypeName}='boolean',${objectTypeName}='object'`,
-        // Insert Array.isArray and util.isNumber as arguments
-        basicArgs = [numberCheckFnName, bufferValidate],
-        basicValidator = [require('node:util').isNumber, Buffer.isBuffer];
+        validator = {
+            str: (currentPropName: string) => `typeof ${currentPropName}===${strTypeName}`,
+            num: (currentPropName: string) => `typeof ${currentPropName}===${numberTypeName}`,
+            bool: (currentPropName: string) => `typeof ${currentPropName}===${boolTypeName}`,
+            undef: (currentPropName: string) => `${currentPropName}===undefined`,
+            nil: (currentPropName: string) => `${currentPropName}===null`,
+            obj: (currentPropName: string) => `typeof ${currentPropName}===${objectTypeName}&&${currentPropName}!==null`,
+            buf: (currentPropName: string) => `${bufferValidate}(${currentPropName})`
+        };
 
-    const validator: { [key: string]: (p: string) => string } = {
-        str: (currentPropName) => `typeof ${currentPropName}===${strTypeName}`,
-        num: (currentPropName) => `${numberCheckFnName}(${currentPropName})`,
-        bool: (currentPropName) => `typeof ${currentPropName}===${boolTypeName}`,
-        undef: (currentPropName) => `${currentPropName}===undefined`,
-        nil: (currentPropName) => `${currentPropName}===null`,
-        obj: (currentPropName) => `typeof ${currentPropName}===${objectTypeName}`,
-        buf: (currentPropName) => `${bufferValidate}(${currentPropName})`
+    // For infer types
+    export type BasicType = keyof typeof validator;
+
+    type SuffixQuestionMark<T extends string> = `?${T}`;
+
+    export type OptionalBasicType = keyof {
+        [K in BasicType as SuffixQuestionMark<K>]: null
     };
+    
+    type InferBasic<P> = P extends 'str' ? string : (
+        P extends 'num' ? number : (
+            P extends 'bool' ? boolean : (
+                P extends 'undef' ? undefined : (
+                   P extends 'nil' ? null : any
+                )
+            )
+        )
+    );
+
+    type InferOptionalBasic<T> = T extends `${infer U}?` ? InferBasic<U> | undefined : never;
+    export type Infer<T> = T extends BasicType ? InferBasic<T> : (
+        T extends OptionalBasicType ? InferOptionalBasic<T> : {
+            [K in keyof T]: Infer<T[K]>       
+        }
+    );
+
+    export type Validator = Dict<Validator> | BasicType | OptionalBasicType; 
+
+    // Actual code 
+    const outerVars = `const ${strTypeName}='string',${boolTypeName}='boolean',${objectTypeName}='object',`
+        + `${numberTypeName}='number'`,
+        // Insert Array.isArray and util.isNumber as arguments
+        basicArgs = [bufferValidate],
+        basicValidator = [Buffer.isBuffer];
 
     function isObj(v: any): v is object {
         return v === Object(v);
@@ -32,7 +60,7 @@ export namespace guard {
 
     function createCheck(
         type: Validator, propName: string, 
-        h: { index: number, deps: Dict<any> } = { index: 0, deps: {} }
+        h: { index: number, deps: Dict<any>, aliasIndex: number } = { index: 0, aliasIndex: 0, deps: {} }
     ): string {
         if (typeof type === 'string' && type in validator)
             return getCheckStr(type, propName);
@@ -55,12 +83,13 @@ export namespace guard {
         }
 
         if (type[0] === '?') {
-            const parentObjEndIndex = propName.lastIndexOf('.');
+            const parentObjEndIndex = propName.lastIndexOf('.'), subProp = '_a' + h.aliasIndex;
+            h.deps[subProp] = propName.substring(parentObjEndIndex + 1);
 
             // This case only returns a literal
             return `(${parentObjEndIndex === -1 
                 ? validator.undef(propName) 
-                : `!('${propName.substring(parentObjEndIndex + 1)}'in ${propName.substring(0, parentObjEndIndex)})`
+                : `!(${subProp} in ${propName.substring(0, parentObjEndIndex)})`
             }||${getCheckStr(type.substring(1), propName)})`;
         }
 
@@ -71,8 +100,8 @@ export namespace guard {
     /**
      * Create a request validator
      */
-    export function create<T extends Validator>(type: T, inValidator = false): <E>(o?: E) => E | null {
-        const h = { index: 0, deps: {} };
+    export function create<T extends Validator>(type: T, inValidator = false): (o?: any) => Infer<T> | null {
+        const h = { index: 0, aliasIndex: 0, deps: {} };
 
         const body = `${outerVars};return function(${
             defaultPropName
