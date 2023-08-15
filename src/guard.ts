@@ -3,10 +3,11 @@ export namespace guard {
 
     const numberCheckFnName = 'n',
         strTypeName = 's',
+        objectTypeName = 'x',
         boolTypeName = 'b',
         defaultPropName = 'o',
         bufferValidate = 'p',
-        outerVars = `const ${strTypeName}='string',${boolTypeName}='boolean'`,
+        outerVars = `const ${strTypeName}='string',${boolTypeName}='boolean',${objectTypeName}='object'`,
         // Insert Array.isArray and util.isNumber as arguments
         basicArgs = [numberCheckFnName, bufferValidate],
         basicValidator = [require('node:util').isNumber, Buffer.isBuffer];
@@ -17,7 +18,7 @@ export namespace guard {
         bool: (currentPropName) => `typeof ${currentPropName}===${boolTypeName}`,
         undef: (currentPropName) => `${currentPropName}===undefined`,
         nil: (currentPropName) => `${currentPropName}===null`,
-        obj: (currentPropName) => `${currentPropName}===Object(${currentPropName})`,
+        obj: (currentPropName) => `typeof ${currentPropName}===${objectTypeName}`,
         buf: (currentPropName) => `${bufferValidate}(${currentPropName})`
     };
 
