@@ -8,7 +8,7 @@ export interface StreamOptions extends ResponseInit {
     root?: string, 
 }
 
-const file = globalThis.Bun?.file;
+const getfile = globalThis.Bun?.file;
 
 /**
  * Serve a file 
@@ -16,11 +16,11 @@ const file = globalThis.Bun?.file;
  * @param options File loading options
  * @returns A middleware
  */
-export function stream(des: string, options?: ResponseInit): Handler {
+export function file(des: string, options?: ResponseInit): Handler {
     des = resolve(des);
     if (!statSync(des).isFile()) throw new Error('Path must be a file. For serving directory, use watch() with wildcards instead');
 
-    return () => new Response(file(des), options);
+    return () => new Response(getfile(des), options);
 };
 
 /**
@@ -37,7 +37,7 @@ export function group(dir: string, options?: StreamOptions) {
 
     const group = new Group(root);
     for (const [relative, absolute] of searchFiles(dir)) 
-        group.get(relative, () => new Response(file(absolute), options));
+        group.get(relative, () => new Response(getfile(absolute), options));
     
     return group;
 }
@@ -54,8 +54,7 @@ export function dir(des: string, options?: StreamOptions): Handler<string> {
     if (des.at(-1) != '/') des += '/';
 
     return async ctx => {
-        // @ts-ignore
-        const f = file(des + ctx.params['*']);
+        const f = getfile(des + (ctx.params as any)['*']);
         return await f.exists() ? new Response(f, options) : null;
     }
 }

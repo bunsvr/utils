@@ -25,42 +25,61 @@ export namespace guard {
         return v === Object(v);
     }
 
-    function createCheck(type: Validator, propName: string) {
-        let vld: string = '';
+    function getCheckStr(name: string, prop: string) {
+        return validator[name](prop);
+    }
+
+    function createCheck(
+        type: Validator, propName: string, 
+        h: { index: number, deps: Dict<any> } = { index: 0, deps: {} }
+    ): string {
+        if (typeof type === 'string' && type in validator)
+            return getCheckStr(type, propName);
+
         if (isObj(type)) {
-            vld += validator.obj(propName);
-            for (const prop in type) {
-                vld += '&&' + createCheck(type[prop], `${propName}.${prop}`);
+            let vld = '';
+
+            if (propName.includes('.')) {
+                vld += `_c${h.index}(${propName})`;
+                h.deps['_c' + h.index] = create(type, true);
+                ++h.index;
+            } else {
+                vld += validator.obj(propName);
+                
+                for (const prop in type) 
+                    vld += '&&' + createCheck(type[prop], `${propName}.${prop}`, h);
             }
+            
             return vld;
         }
 
         if (type[0] === '?') {
             const parentObjEndIndex = propName.lastIndexOf('.');
 
+            // This case only returns a literal
             return `(${parentObjEndIndex === -1 
                 ? validator.undef(propName) 
                 : `!('${propName.substring(parentObjEndIndex + 1)}'in ${propName.substring(0, parentObjEndIndex)})`
-            }||${createCheck(type.substring(1), propName)})`;
+            }||${getCheckStr(type.substring(1), propName)})`;
         }
 
-        // TODO: Compose array
-
-        if (type in validator)
-            return validator[type](propName);
-
+        // TODO: Compose array 
         return null;
     }
 
     /**
      * Create a request validator
      */
-    export function create<T extends Validator>(type: T): <E>(o?: E) => E | null {
+    export function create<T extends Validator>(type: T, inValidator = false): <E>(o?: E) => E | null {
+        const h = { index: 0, deps: {} };
+
         const body = `${outerVars};return function(${
             defaultPropName
-        }){return ${createCheck(type, defaultPropName)}?o:null}`;
+        }){return ${createCheck(type, defaultPropName, h)}${inValidator ? '' : '?o:null'}}`;
 
-        return Function(...basicArgs, body)(...basicValidator);
+        return Function(
+            ...basicArgs, ...Object.keys(h.deps), body
+        )(...basicValidator, ...Object.values(h.deps));
     }
 
     let registeredTypes = 0;
