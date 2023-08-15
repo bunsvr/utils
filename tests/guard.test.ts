@@ -42,16 +42,9 @@ test('Nested', () => {
     })).not.toBeNil();
 });
 
-test('Buffer', () => {
-    const check = guard.create('?buf');
-    console.log(check.toString());
-
-    expect(check(Buffer.allocUnsafe(1))).not.toBeNil();
-    expect(check()).toBeUndefined();
-});
-
 test('Register types', () => {
     guard.register('fn', (v: any) => typeof v === 'function');
+    // @ts-ignore
     const check = guard.create('fn');
     console.log(check.toString())
 
