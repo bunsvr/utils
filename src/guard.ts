@@ -9,7 +9,7 @@ export namespace guard {
             undef: (currentPropName: string) => `${currentPropName}===undefined`,
             nil: (currentPropName: string) => `${currentPropName}===null`,
             obj: (currentPropName: string) => `typeof ${currentPropName}==='object'&&${currentPropName}!==null`,
-            email: (currentPropName: string) => `${emailFnName}(${currentPropName})`
+            email: (currentPropName: string) => `${validator.str(currentPropName)}&&${emailFnName}(${currentPropName})`
         };
 
     // For infer types
