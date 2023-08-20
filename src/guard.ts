@@ -44,12 +44,12 @@ export namespace guard {
     const basicArgs = [], basicValidator = [];
 
     function checkEmail(email: string) {
-        // Email first part is often longer
-        let i = email.lastIndexOf('@');
-        return i !== -1
-            // Invalid domain if the next char is .
-            && email.charCodeAt(i + 1) !== 46
-            && email.indexOf('.', i + 2) !== -1;
+        let i = email.indexOf('@');
+        if (i === -1 || email.charCodeAt(i + 1) === 46)
+            return false;
+
+        i = email.indexOf('.', i + 2);
+        return i !== -1 && i !== email.length - 1;
     }
 
     function getCheckStr(name: string, prop: string) {

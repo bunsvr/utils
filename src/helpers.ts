@@ -67,3 +67,18 @@ export type ResponseBody = ReadableStream<any> | BlobPart | BlobPart[] | FormDat
 export function writeHead(options: ResponseInit) {
     return (body: ResponseBody) => new Response(body, options);
 }
+
+/**
+ * Left pad.
+ *
+ * This is the left pad algorithm by Travvy
+ */
+export function leftPad(str: string, cnt: number, literal: string): string {
+    let p = '';
+    while (true) {
+        p = (cnt & 1) === 0 ? p + literal : p;
+        cnt >>= 1;
+        if (cnt === 0) return p + str;
+        literal += literal;
+    }
+}
