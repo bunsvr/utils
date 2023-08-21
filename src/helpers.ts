@@ -76,8 +76,9 @@ export function writeHead(options: ResponseInit) {
 export function leftPad(str: string, cnt: number, literal: string): string {
     let p = '';
     while (true) {
-        p = (cnt & 1) === 0 ? p + literal : p;
+        if ((cnt & 1) === 1) p += literal;
         cnt >>= 1;
+
         if (cnt === 0) return p + str;
         literal += literal;
     }

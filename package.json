@@ -1,16 +1,15 @@
 {
   "name": "@stricjs/utils",
-  "version": "1.4.6",
+  "version": "1.4.7",
   "repository": {
     "url": "https://github.com/bunsvr/utils"
   },
   "main": "index.js",
   "devDependencies": {
     "bun-types": "latest",
-    "esbuild": "^0.16.10",
     "typescript": "^4.9.4",
     "mitata": "^0.1.6",
-    "@stricjs/router": "^4.0.10",
+    "@stricjs/router": "^4.1.1",
     "buchta": "latest"
   },
   "description": "Utilities for parsing and handling requests",

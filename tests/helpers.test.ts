@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { createHTML, html, response } from '..';
+import { createHTML, decodeURIComponent, html, leftPad, response } from '..';
 
 test('HTML', async () => {
     const staticHTML = '<p></p>';
@@ -10,8 +10,16 @@ test('HTML', async () => {
 });
 
 test('Predefined response', async () => {
-    const obj = {'a': 'b'}
+    const obj = { 'a': 'b' }
     const objRes = response(obj);
 
     expect(await objRes().json()).toEqual(obj);
+});
+
+test('Left pad', () => {
+    expect(leftPad('str', 2, ' ')).toBe('  str');
+});
+
+test('Decode URI', () => {
+    expect(decodeURIComponent('Hi%20there')).toBe('Hi there');
 });
