@@ -2,13 +2,17 @@ export namespace guard {
     const defaultPropName = 'o',
         emailFnName = '_e',
         regexVarPrefix = '_r',
+        snumFnName = '_f',
+        arrayFnName = '_a',
         validator = {
             str: (currentPropName: string) => `typeof ${currentPropName}==='string'`,
             num: (currentPropName: string) => `typeof ${currentPropName}==='number'`,
+            snum: (currentPropName: string) => `${snumFnName}(${currentPropName})`,
             bool: (currentPropName: string) => `typeof ${currentPropName}==='boolean'`,
             undef: (currentPropName: string) => `${currentPropName}===undefined`,
             nil: (currentPropName: string) => `${currentPropName}===null`,
             obj: (currentPropName: string) => `typeof ${currentPropName}==='object'&&${currentPropName}!==null`,
+            sobj: (currentPropName: string) => `${validator.obj(currentPropName)}&&!${arrayFnName}(currentPropName)`,
             email: (currentPropName: string) => `${validator.str(currentPropName)}&&${emailFnName}(${currentPropName})`
         };
 
@@ -41,7 +45,7 @@ export namespace guard {
     export type Validator = Dict<Validator> | BasicType | OptionalBasicType | RegExp;
 
     // Actual code 
-    const basicArgs = [], basicValidator = [];
+    const basicArgs = [snumFnName, arrayFnName], basicValidator = [Number.isFinite, Array.isArray];
 
     function checkEmail(email: string) {
         let i = email.indexOf('@');

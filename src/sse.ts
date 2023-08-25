@@ -47,14 +47,26 @@ export class SSE<T extends string = any> {
 }
 
 function isAsync(func: any) {
-  return func.constructor.name === 'AsyncFunction';
+    return func.constructor.name === 'AsyncFunction';
 }
 
-function createHandler(sse: SSE) {
+const defaultOpts = {
+    headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive'
+    }
+};
+
+function createHandler(sse: SSE): Handler {
     const args = 'r' + (sse.hasStore ? ',o' : '');
     const isHandlerAsync = isAsync(sse.handler),
         abortHandlerExists = !!sse.abortHandler;
     const abortStatement = abortHandlerExists ? `q(${args})` : 'c.close()';
+
+    // Fix missing options
+    sse.options ||= {};
+    Object.assign(sse.options.headers, defaultOpts.headers);
 
     // s: signal,
     // r: request
@@ -65,6 +77,9 @@ function createHandler(sse: SSE) {
     // s: signal
     // q: abort handler
     // t: content type
-    return Function('a', `const d={headers:{'Content-Type':'text/event-stream','Cache-Control':'no-cache','Connection':'keep-alive'}},type='direct',v='Accept',h=a.handler,t='text/event-stream'${abortHandlerExists ? ',q=a.abortHandler' : ''};Object.assign(d,a.options);return function(${args}){if(r.headers.get(v)===t)return new Response(new ReadableStream({type,${isHandlerAsync ? 'async ' : ''}pull(c){r.controller=c;while(!r.signal.aborted)${isHandlerAsync ? 'await ' : ''}h(${args});${abortStatement};}}),d);}`)(sse) as Handler;
+    return Function('a', `${abortHandlerExists ? 'const q=a.abortHandler' : ''}`
+        + `Object.assign(d,a.options);` + `return function(${args}){if(r.headers.get('Accept')==='text/event-stream')`
+        + `return new Response(new ReadableStream({type:'direct',${isHandlerAsync ? 'async ' : ''}pull(c)`
+        + `{r.controller=c;while(!r.signal.aborted)${isHandlerAsync ? 'await ' : ''}h(${args});${abortStatement};}}),d);}`)(sse);
 }
 
