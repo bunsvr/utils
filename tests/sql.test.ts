@@ -1,17 +1,25 @@
 /// <reference types='bun-types' />
+import Database from 'bun:sqlite';
 import { test, expect } from 'bun:test';
 import { sql } from '..';
 
-test('Select', () => {
-    const statement = sql
-        .select('*')
-        .from('users')
-        .where('age = 20')
-        .or('age = 15')
-        .get();
+const db = new Database(':memory:');
 
-    expect(statement).toBe(
-        "SELECT * FROM users WHERE "
-        + "age = 20 OR age = 15"
-    );
+test('Select', () => {
+    const table = sql.table('users', {
+        id: 'int',
+        name: 'varchar(255)',
+        age: 'int'
+    })
+        .primary('id')
+        .bind(db);
+
+    const query = table.select('id', 'age')
+        .distinct()
+        .where(
+            'id', '<', 1, '&',
+            'age', '>', 14
+        ).value;
+
+    expect(query).toBe('SELECT DISTINCT id,age FROM users WHERE id < 1 AND age > 14');
 });
