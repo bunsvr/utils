@@ -102,7 +102,7 @@ export namespace CSP {
             headerValue += getHeader(opts.uri, "base-uri");
 
         if (opts.report)
-            headerValue += `report-uri ${opts.report}; report-to ${opts.report}; `;
+            headerValue += `report-uri ${opts.report};report-to ${opts.report};`;
 
         if (opts.navigate)
             headerValue += getHeader(opts.navigate, "navigate-to");

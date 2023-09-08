@@ -45,16 +45,15 @@ export function decodeURIComponent(uri: string) {
     let percentPosition = uri.indexOf('%');
     if (percentPosition === -1) return uri;
 
-    const length = uri.length;
     let decoded = '',
         last = 0,
         codepoint = 0,
         startOfOctets = percentPosition,
         state = 12,
         // Loop stuff
-    high: number, low: number, byte: number, type: number;
+        high: number, low: number, byte: number, type: number;
 
-    while (percentPosition > -1 && percentPosition < length) {
+    while (percentPosition > -1 && percentPosition < uri.length) {
         high = hexCodeToInt(uri[percentPosition + 1], 4);
         low = hexCodeToInt(uri[percentPosition + 2], 0);
         byte = high | low;
@@ -81,7 +80,7 @@ export function decodeURIComponent(uri: string) {
         else {
             percentPosition += 3;
             if (
-                percentPosition < length
+                percentPosition < uri.length
                 && uri.charCodeAt(percentPosition) === 37
             ) continue;
 

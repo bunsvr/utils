@@ -1,8 +1,7 @@
+import { EmptyObject } from '../helpers';
 import { decodeURIComponent as decode } from './decodeURI';
 
 const plusRegex = /\+/g;
-function E() {}
-E.prototype = Object.create(null);
 
 type FixedSizeArray<N extends number, T> = N extends 0 ? never[] : {
     0: T;
@@ -15,12 +14,12 @@ export namespace qs {
      * @param input 
      */
     export function parse<T extends Record<string, any> = Record<string, string | string[]>>(input: string): T {
-        const inputLength = input.length, result = new E;
-        let key = '', value = '', startingIndex = -1, equalityIndex = -1, shouldDecodeKey = false, shouldDecodeValue = false, 
+        const result = new EmptyObject;
+        let key = '', value = '', startingIndex = -1, equalityIndex = -1, shouldDecodeKey = false, shouldDecodeValue = false,
             keyHasPlus = false, valueHasPlus = false, hasBothKeyValuePair = false, charCode = 0, i = 0;
         // Have a boundary of input.length + 1 to access last pair inside the loop.
-        while (i <= inputLength) {
-            if (i === inputLength) charCode = 38;
+        while (i <= input.length) {
+            if (i === input.length) charCode = 38;
             else charCode = input.charCodeAt(i);
             // Handle '&' and end of line to pass the current values to result
             switch (charCode) {
@@ -103,21 +102,21 @@ export namespace qs {
     export function searchKey<T extends number>(key: string, maxValues: T): Parser<FixedSizeArray<T, string>>;
 
     export function searchKey<T extends number = 1>(
-        key: string, 
+        key: string,
         maxValues: T = 1 as any
     ): Parser<string> | Parser<FixedSizeArray<T, string>> {
         key = encodeURIComponent(key) + '=';
 
         let body = 'return function(_)', noMaxVal = maxValues === 1, len = key.length;
-        body += noMaxVal 
+        body += noMaxVal
             ? (
-                '{let i=_.url.indexOf(k,_.query+1);if(i===-1)return null;' 
+                '{let i=_.url.indexOf(k,_.query+1);if(i===-1)return null;'
                 + `i+=${len};const j=_.url.indexOf('&',i);return j===-1?_.url.substring(i):_.url.substring(i,j)}`
             ) : (
                 '{const r=new Array(m);let i=0,j=_.url.indexOf(k,_.query+1),e;'
                 + `while(j!==-1&&i<m){`
-                + `j+=${len};e=_.url.indexOf('&',j);` 
-                + `if(e===-1){r[i]=_.url.substring(j);return r;}` 
+                + `j+=${len};e=_.url.indexOf('&',j);`
+                + `if(e===-1){r[i]=_.url.substring(j);return r;}`
                 + `r[i]=_.url.substring(j,e);++i;j=_.url.indexOf(k,e+1);`
                 + `}`
                 + 'return r;}'

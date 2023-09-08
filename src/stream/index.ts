@@ -5,7 +5,7 @@ import searchFiles from './searchFiles';
 
 export interface StreamOptions extends ResponseInit {
     doParsePath?: boolean,
-    root?: string, 
+    root?: string,
 }
 
 const getfile = globalThis.Bun?.file;
@@ -18,7 +18,7 @@ const getfile = globalThis.Bun?.file;
  */
 export function file(des: string, options?: ResponseInit): Handler {
     des = resolve(des);
-    if (!statSync(des).isFile()) throw new Error('Path must be a file. For serving directory, use watch() with wildcards instead');
+    if (!statSync(des).isFile()) throw new Error('Path must be a file. For serving directory, use `dir()` with wildcard routes instead');
 
     return () => new Response(getfile(des), options);
 };
@@ -36,9 +36,9 @@ export function group(dir: string, options?: StreamOptions) {
     options = rest;
 
     const group = new Group(root);
-    for (const [relative, absolute] of searchFiles(dir)) 
+    for (const [relative, absolute] of searchFiles(dir))
         group.get(relative, () => new Response(getfile(absolute), options));
-    
+
     return group;
 }
 

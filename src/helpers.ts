@@ -22,7 +22,6 @@ export function createHTML(options: ResponseInit): typeof html;
  */
 export function createHTML(options: ResponseInit, html: string): () => Response;
 export function createHTML(options: ResponseInit, html?: string) {
-    // TODO: Check whether <!DOCTYPE html is present in the html string so no need to include content type
     options.headers ||= {};
     Object.assign(options.headers, htmlResOpts);
 
@@ -35,11 +34,22 @@ export function createHTML(options: ResponseInit, html?: string) {
 }
 
 /**
+ * Shorthand for sending a file as a response
+ */
+export function sendFile(path: string) {
+    return new Response(Bun.file(path));
+}
+
+/**
  * Create a response function
  */
 export function response(serializable: any, options?: ResponseInit): () => Response {
+    const optionsExists = !!options,
+        isObj = serializable && typeof serializable === 'object';
+    if (serializable === undefined) serializable = null;
+
     // Serialize the object (don't put buffer and other related streams and stuff here pls)
-    if (serializable === Object(serializable)) {
+    if (isObj) {
         if (serializable.toString === Object.prototype.toString) {
             serializable = JSON.stringify(serializable);
 
@@ -50,12 +60,19 @@ export function response(serializable: any, options?: ResponseInit): () => Respo
         } else serializable.toString();
     } else serializable = String(serializable);
 
-    const optionsExists = !!options, args = ['d'];
-    if (optionsExists) args.push('o');
+    const args = [], values = [];
+    if (isObj) {
+        args.push('d');
+        values.push(serializable);
+    }
 
-    args.push(`return function(){return new Response(d${optionsExists ? ',o' : ''})}`);
+    if (optionsExists) {
+        args.push('o');
+        values.push(options);
+    }
 
-    return Function(...args)(serializable, options);
+    args.push(`return function(){return new Response(${isObj ? 'd' : serializable}${optionsExists ? ',o' : ''})}`);
+    return Function(...args)(...values);
 }
 
 export type BlobPart = string | Blob | BufferSource;
@@ -83,3 +100,72 @@ export function leftPad(str: string, cnt: number, literal: string): string {
         literal += literal;
     }
 }
+
+/**
+ * Extend an object. Faster than spread and `Object.assign`
+ */
+export function extend(target: any, source: any): void {
+    let k: any;
+    for (k in source) target[k] = source[k];
+}
+
+/**
+ * Create a null prototype object and assign keys of a and b to that object
+ */
+export function extendClone<A, B>(a: A, b: B): A & B {
+    let o = new EmptyObject, k: any;
+    for (k in a) o[k] = a[k];
+    for (k in b) o[k] = b[k];
+    return o;
+}
+
+const isVariable = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
+
+/**
+ * Internal API to create an extend function body based on an object
+ */
+export function createExtendFunction(b: any, sourceName: string, targetName: string): string {
+    let fn = '', key: string, value: any;
+
+    for (key in b) {
+        value = b[key];
+        if (value === undefined) continue;
+
+        if (isVariable.test(key)) key = '.' + key;
+        else key = `[\`${key}\`]`;
+
+        fn += targetName + key + '=';
+
+        if (typeof value !== 'object' && typeof value !== 'function') {
+            if (typeof value === 'string') fn += `'${value}'`;
+            else fn += String(value);
+        }
+        else fn += sourceName + key;
+
+        fn += ';';
+    }
+
+    return fn;
+}
+
+/**
+ * Create an extend function for an object.
+ * This optimization only works with object that has string keys
+ */
+export function createExtend(b: any): (a: any) => void {
+    return Function('b', `return function(a){${createExtendFunction(b, 'b', 'a')}}`)(b);
+}
+
+/**
+ * Return a function to create a shallow copy of an object
+ */
+export function createCopy<T>(o: T): () => T {
+    return Function('o', 'E', `return function(){const t=new E;${createExtendFunction(o, 'o', 't')
+        }return t}`)(o, EmptyObject);
+}
+
+/**
+ * Create a null prototype object
+ */
+export function EmptyObject() { };
+EmptyObject.prototype = Object.create(null);

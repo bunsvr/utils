@@ -1,3 +1,5 @@
+import { createExtendFunction, EmptyObject } from "./helpers";
+
 /**
  * All request methods
  */
@@ -52,10 +54,8 @@ function setHeader(headers: object, name: string, value: string | string[]) {
     if (!Array.isArray(value))
         value = [value];
 
-    headers[name] = value.join(', ');
+    headers[name] = value.join(',');
 }
-
-const allowOriginHeader = 'Access-Control-Allow-Origin';
 
 class CORS {
     /**
@@ -86,31 +86,35 @@ class CORS {
         if (options.allowMethods)
             setHeader(headers, 'Access-Control-Allow-Methods', options.allowMethods);
 
-        this.headers = Object.seal(headers);
-        this.composeCheck();
+        this.headers = headers;
+        this.composeCheck(headers);
+
+        if (!this.check) this.check = () => headers;
     }
 
-    composeCheck() {
+    composeCheck(headers: Dict<string>) {
         let origins = this.options.allowOrigins;
-        if (!origins || origins.length === 0 || origins === '*') 
-            return this.check = Function('a','return function(){return a}')(this.headers);
+        if (!origins || origins.length === 0 || origins === '*') return;
 
         if (origins && origins.length === 1) origins = origins[0];
 
-        const body =`const v='Access-Control-Allow-Origin',y='Origin'${
-            typeof origins === 'string' ? (origins === '*' 
-                ? '' 
-                : `,h0='${origins}'`
-            ) : origins.map(
-                (value, i) => `,h${i}='${value}'` 
-            ).join('')
-        };return function(r){const c={...a};${
-            typeof origins === 'string' ? `if(r===h0){c[v]=r;c.Vary=y;}` : `switch(r){${
-                origins.map((_, i) => `case h${i}:`).join('')
-            }c[v]=r;c.Vary=y}`
-        }return c}`;
+        if (typeof origins === 'string') {
+            headers['Access-Control-Allow-Origin'] = origins;
+            headers.Vary = 'Origin';
+            // @ts-ignore
+            this.headers = headers;
+            return;
+        }
 
-        this.check = Function('a', body)(this.headers);
+        const assignBody = createExtendFunction(headers, 'a', 'c');
+
+        const body = `return function(r){const c=new E;${assignBody}`
+            + `switch(r){${origins.map(a => `case '${a}':`).join('')}`
+            + `c['Access-Control-Allow-Origin']=r;break;`
+            + `default:c['Access-Control-Allow-Origin']='${origins[0]}'}`
+            + `c.Vary='Origin';return c}`;
+
+        this.check = Function('a', 'E', body)(headers, EmptyObject);
     }
 
     /**
@@ -118,26 +122,8 @@ class CORS {
      * @param requestOrigin The origin to check
      * @returns The CORS headers
      */
-    check(requestOrigin: string) {
-        // Shallow copy
-        const headers = { ...this.headers } as CORS.Headers;
-
-        const origins = this.options.allowOrigins;
-        if (origins === undefined || origins.length === 0)
-            return headers;
-
-        // @ts-ignore distinguish between string and string[]
-        if (origins.pop === undefined) 
-            headers[allowOriginHeader] = origins as string;
-        else if (origins.includes(requestOrigin))
-            headers[allowOriginHeader] = requestOrigin;
-
-        // If value is not all origin set the 'Vary' header
-        if (headers[allowOriginHeader] !== '*')
-            headers['Vary'] = 'Origin';
-
-        return headers;
-    }
+    /* @ts-ignore */
+    check(requestOrigin: string): CORS.Headers;
 }
 
 export { CORS };

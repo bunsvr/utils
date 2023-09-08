@@ -1,5 +1,5 @@
 export function extractBearer(headerValue: string): string | null {
-    if (headerValue.indexOf('Bearer ') === 0) 
+    if (headerValue.startsWith('Bearer '))
         return headerValue.substring(7);
     return null;
 }
@@ -10,5 +10,5 @@ export function bearer(req: Request): string | null {
         headerValue = req.headers.get('Proxy-Authorization');
         if (headerValue === null) return null;
     }
-    return extractBearer(headerValue); 
+    return extractBearer(headerValue);
 }

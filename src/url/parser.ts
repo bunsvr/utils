@@ -17,7 +17,7 @@ export namespace URLParser {
      * @param u an URL with the same format as Bun `req.url`
      */
     export function query(u: string) {
-        const s = u.indexOf('?');
+        const s = u.indexOf('?', 8);
         if (s === -1) return '';
 
         return u.substring(s + 1);

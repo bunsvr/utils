@@ -24,7 +24,7 @@ export class SSE<T extends string = any> {
      */
     plugin(app: Router) {
         // @ts-ignore internal store
-        if (app.injects) this.hasStore = true;
+        if (app.storage) this.hasStore = true;
         app.get(this.path, createHandler(this));
     }
 

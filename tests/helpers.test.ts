@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { createHTML, decodeURIComponent, html, leftPad, response } from '..';
+import { createCopy, createExtend, createHTML, decodeURIComponent, extend, html, leftPad, response } from '..';
 
 test('HTML', async () => {
     const staticHTML = '<p></p>';
@@ -22,4 +22,30 @@ test('Left pad', () => {
 
 test('Decode URI', () => {
     expect(decodeURIComponent('Hi%20there')).toBe('Hi there');
+});
+
+test('Extend', () => {
+    const a = { a: 1 };
+    extend(a, { b: 2 });
+    expect(a).toEqual({ a: 1, b: 2 });
+});
+
+test('Custom extend', () => {
+    const source = { a: 1, 'a-b': 2, o: {} },
+        extendObj = createExtend(source),
+        o = {};
+
+    console.log(extendObj.toString());
+
+    extendObj(o);
+    expect(o).toEqual(source);
+});
+
+test('Copy', () => {
+    const source = { a: 1, 'a-b': 2, o: {} },
+        copyObj = createCopy(source);
+
+    console.log(copyObj.toString());
+
+    expect(copyObj()).toEqual(source);
 });
