@@ -1,5 +1,8 @@
 import { expect, test } from 'bun:test';
-import { createCopy, createExtend, createHTML, decodeURIComponent, extend, html, leftPad, response } from '..';
+import {
+    createCopy, createExtend, createHead, createHTML, writeHead,
+    decodeURIComponent, extend, html, leftPad, response
+} from '..';
 
 test('HTML', async () => {
     const staticHTML = '<p></p>';
@@ -10,10 +13,17 @@ test('HTML', async () => {
 });
 
 test('Predefined response', async () => {
-    const obj = { 'a': 'b' }
-    const objRes = response(obj);
+    let obj = { 'a': 'b' }, objRes: (...args: any[]) => Response = response(obj);
 
     expect(await objRes().json()).toEqual(obj);
+
+    objRes = createHead({ status: 404, headers: { 'Content-Type': 'text/plain' } });
+    console.log(objRes.toString());
+
+    expect(objRes('Hi', {}).headers.get('Content-Type')).toBe('text/plain');
+
+    objRes = writeHead({ status: 404 });
+    expect(objRes('Hi').status).toBe(404);
 });
 
 test('Left pad', () => {

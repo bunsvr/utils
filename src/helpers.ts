@@ -86,6 +86,23 @@ export function writeHead(options: ResponseInit) {
 }
 
 /**
+ * Prepare response options for responding.
+ *
+ * This will assign the headers, not overriding them.
+ */
+export function createHead(options: ResponseInit): (body: ResponseBody, options: ResponseInit) => Response {
+    const { headers = null, ...rest } = options,
+        assignFn = createExtendFunction(rest, 'd', 'o');
+    options = rest;
+
+    let headersFn = '';
+    if (headers !== null)
+        headersFn = `if(!('headers'in o))o.headers=new E;` + createExtendFunction(headers, 'd.headers', 'o.headers');
+
+    return Function('d', 'E', `return function(b,o){${assignFn}${headersFn}return new Response(b,o)}`)(options, EmptyObject);
+}
+
+/**
  * Left pad.
  *
  * This is the left pad algorithm by Travvy
