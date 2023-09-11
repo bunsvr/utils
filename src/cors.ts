@@ -1,3 +1,4 @@
+import { Plugin } from "@stricjs/router";
 import { createExtendFunction, EmptyObject } from "./helpers";
 
 /**
@@ -87,7 +88,7 @@ class CORS {
             setHeader(headers, 'Access-Control-Allow-Methods', options.allowMethods);
 
         this.headers = headers;
-        this.composeCheck(headers);
+        this.composeCheck(this.headers);
 
         if (!this.check) this.check = () => headers;
     }
@@ -101,8 +102,6 @@ class CORS {
         if (typeof origins === 'string') {
             headers['Access-Control-Allow-Origin'] = origins;
             headers.Vary = 'Origin';
-            // @ts-ignore
-            this.headers = headers;
             return;
         }
 
@@ -115,6 +114,43 @@ class CORS {
             + `c.Vary='Origin';return c}`;
 
         this.check = Function('a', 'E', body)(headers, EmptyObject);
+    }
+
+    /**
+     * Create check for request
+     */
+    create(): (ctx: Request) => void {
+        let origins = this.options.allowOrigins;
+        if (!Array.isArray(origins)) return;
+
+        const assignBody = createExtendFunction(this.headers, 'a', 'c.head'),
+            body = `return function(c){${assignBody}`
+                + `switch(c.url.substring(c.url.indexOf(':',4)+3,c.path)){${origins.map(a =>
+                    `case'${a}':c.head['Access-Control-Allow-Origin']='${a}';break;`
+                ).join('')}`
+                + `default:c.head.['Access-Control-Allow-Origin']='${origins[0]}'}`
+                + `c.head.Vary='Origin'}`;
+
+        return Function('a', 'E', body)(this.headers, EmptyObject);
+    }
+
+    /**
+     * Return a plugin to guard a path
+     */
+    guard<I extends Dict<any> = Dict<any>>(path: string, forceNotFound: boolean = true): Plugin<I> {
+        let origins = this.options.allowOrigins;
+        if (!Array.isArray(origins)) return;
+
+        let body = `if(!('head'in c))c.head=new E;${createExtendFunction(this.headers, 'a', 'c.head')}`
+            + `switch(c.url.substring(c.url.indexOf(':',4)+3,c.path-1)){${origins.map(a =>
+                `case'${a}':c.head['Access-Control-Allow-Origin']='${a}';break;`
+            ).join('')}`
+            + `default:${forceNotFound
+                ? 'return null'
+                : `c.head.['Access-Control-Allow-Origin']='${origins[0]}';break`}`
+            + `}c.head.Vary='Origin'`;
+
+        return app => app.guard(path, Function('a', 'E', `return function(c){${body}}`)(this.headers, EmptyObject))
     }
 
     /**

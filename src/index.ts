@@ -5,7 +5,6 @@ export * from './url/parser';
 export * from './query';
 
 export * from './stream';
-export * from './sse';
 
 export * from './guard';
 
