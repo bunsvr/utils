@@ -174,11 +174,10 @@ export function createExtend(b: any): (a: any) => void {
 }
 
 /**
- * Return a function to create a shallow copy of an object
+ * Return a function to create a copy of an object
  */
 export function createCopy<T>(o: T): () => T {
-    return Function('o', 'E', `return function(){const t=new E;${createExtendFunction(o, 'o', 't')
-        }return t}`)(o, EmptyObject);
+    return Function(`return function(){return ${JSON.stringify(o)}}`)();
 }
 
 /**

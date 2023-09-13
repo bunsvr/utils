@@ -16,11 +16,11 @@ const getfile = globalThis.Bun?.file;
  * @param options File loading options
  * @returns A middleware
  */
-export function file(des: string, options?: ResponseInit): Handler {
+export function file(des: string, options?: ResponseInit): Handler<any, Dict<any>> {
     des = resolve(des);
     if (!statSync(des).isFile()) throw new Error('Path must be a file. For serving directory, use `dir()` with wildcard routes instead');
 
-    return () => new Response(getfile(des), options);
+    return Function('g', 'o', `return function(){return new Response(g('${des}')${options ? ',o' : ''})}`)(getfile, options);
 };
 
 /**
@@ -36,8 +36,10 @@ export function group(dir: string, options?: StreamOptions) {
     options = rest;
 
     const group = new Group(root);
-    for (const [relative, absolute] of searchFiles(dir))
-        group.get(relative, () => new Response(getfile(absolute), options));
+
+    let pair: [relative: string, absolute: string];
+    for (pair of searchFiles(dir))
+        group.get(pair[0], file(pair[1], options));
 
     return group;
 }
@@ -47,14 +49,14 @@ export function group(dir: string, options?: StreamOptions) {
  *
  * This function should be used with `@stricjs/router` wildcard routes
  */
-export function dir(des: string, options?: StreamOptions): Handler<string> {
+export function dir(des: string, options?: StreamOptions): Handler<any, Dict<any>> {
     des = resolve(des);
     if (!statSync(des).isDirectory()) throw new Error('Path must be a directory');
 
     if (des.at(-1) != '/') des += '/';
 
-    return async ctx => {
-        const f = getfile(des + (ctx.params as any)['*']);
-        return await f.exists() ? new Response(f, options) : null;
-    }
+    des = `const f=a('${des}'+c.params['*']);return f.exists().then`
+        + `(function(_){return _?new Response(f${options ? ',b' : ''}):null})`;
+
+    return Function('a', 'b', `return function(c){${des}}`)(getfile, options);
 }

@@ -1,15 +1,6 @@
 /// <reference types='bun-types' />
 import { expect, test } from 'bun:test';
-import { URLParser, qs } from '..';
-
-const url = 'https://example.com:8080/path?a=b';
-test('URL parser', () => {
-    expect(URLParser.hash(url + '#hi')).toBe('hi');
-    expect(URLParser.host(url)).toBe('example.com:8080');
-    expect(URLParser.path(url)).toBe('/path');
-    expect(URLParser.query(url)).toBe('a=b');
-    expect(URLParser.scheme(url)).toBe('https')
-});
+import { qs } from '..';
 
 test('Query parser', () => {
     const str = 'name=a&name=b&age=20';
@@ -24,7 +15,7 @@ test('Key query parser', () => {
     console.log(parse.toString());
 
     // @ts-ignore
-    expect(parse({url: 'a=d?name=b', query: -1})).toBe('b');
+    expect(parse({ url: 'a=d?name=b', query: -1 })).toBe('b');
 });
 
 test('Key query parser multiple values', () => {
@@ -32,5 +23,5 @@ test('Key query parser multiple values', () => {
     console.log(parse.toString());
 
     // @ts-ignore
-    expect(parse({url: 'name=a&o=a&name=b', query: -1})).toEqual(['a', 'b']);
+    expect(parse({ url: 'name=a&o=a&name=b', query: -1 })).toEqual(['a', 'b']);
 })

@@ -105,9 +105,7 @@ class CORS {
             return;
         }
 
-        const assignBody = createExtendFunction(headers, 'a', 'c');
-
-        const body = `return function(r){const c=new E;${assignBody}`
+        const body = `return function(r){const c=new E;${createExtendFunction(headers, 'a', 'c')}`
             + `switch(r){${origins.map(a => `case '${a}':`).join('')}`
             + `c['Access-Control-Allow-Origin']=r;break;`
             + `default:c['Access-Control-Allow-Origin']='${origins[0]}'}`
@@ -121,11 +119,11 @@ class CORS {
      */
     create(): (ctx: Request) => void {
         let origins = this.options.allowOrigins;
-        if (!Array.isArray(origins)) return;
+        if (!Array.isArray(origins)) return null;
 
         const assignBody = createExtendFunction(this.headers, 'a', 'c.head'),
             body = `return function(c){${assignBody}`
-                + `switch(c.url.substring(c.url.indexOf(':',4)+3,c.path)){${origins.map(a =>
+                + `switch(c.url.substring(c.url.indexOf(':',4)+3,c.path-1)){${origins.map(a =>
                     `case'${a}':c.head['Access-Control-Allow-Origin']='${a}';break;`
                 ).join('')}`
                 + `default:c.head.['Access-Control-Allow-Origin']='${origins[0]}'}`
@@ -137,17 +135,15 @@ class CORS {
     /**
      * Return a plugin to guard a path
      */
-    guard<I extends Dict<any> = Dict<any>>(path: string, forceNotFound: boolean = true): Plugin<I> {
+    guard<I extends Dict<any> = Dict<any>>(path: string): Plugin<I> {
         let origins = this.options.allowOrigins;
-        if (!Array.isArray(origins)) return;
+        if (!Array.isArray(origins)) return null;
 
         let body = `if(!('head'in c))c.head=new E;${createExtendFunction(this.headers, 'a', 'c.head')}`
             + `switch(c.url.substring(c.url.indexOf(':',4)+3,c.path-1)){${origins.map(a =>
                 `case'${a}':c.head['Access-Control-Allow-Origin']='${a}';break;`
             ).join('')}`
-            + `default:${forceNotFound
-                ? 'return null'
-                : `c.head.['Access-Control-Allow-Origin']='${origins[0]}';break`}`
+            + `default:c.head.['Access-Control-Allow-Origin']='${origins[0]}';break`
             + `}c.head.Vary='Origin'`;
 
         return app => app.guard(path, Function('a', 'E', `return function(c){${body}}`)(this.headers, EmptyObject))

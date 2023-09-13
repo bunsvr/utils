@@ -1,7 +1,6 @@
 export function extractBearer(headerValue: string): string | null {
-    if (headerValue.startsWith('Bearer '))
-        return headerValue.substring(7);
-    return null;
+    return headerValue.startsWith('Bearer ')
+        ? headerValue.substring(7) : null;
 }
 
 export function bearer(req: Request): string | null {
