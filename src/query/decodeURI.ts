@@ -51,42 +51,49 @@ export function decodeURIComponent(uri: string) {
         startOfOctets = percentPosition,
         state = 12,
         // Loop stuff
-        high: number, low: number, byte: number, type: number;
+        byte: number, type: number;
 
-    while (percentPosition > -1 && percentPosition < uri.length) {
-        high = hexCodeToInt(uri[percentPosition + 1], 4);
-        low = hexCodeToInt(uri[percentPosition + 2], 0);
-        byte = high | low;
+    do {
+        ++percentPosition;
+        byte = uri[percentPosition] in HEX ? (HEX[uri[percentPosition]] << 4) : 255;
+
+        ++percentPosition;
+        byte = byte | (uri[percentPosition] in HEX ? HEX[uri[percentPosition]] : 255);
+
         type = UTF8_DATA[byte];
         state = UTF8_DATA[256 + state + type];
         codepoint = (codepoint << 6) | (byte & UTF8_DATA[364 + type]);
 
-        if (state === 12) {
-            decoded += uri.substring(last, startOfOctets);
+        switch (state) {
+            case 12:
+                decoded += uri.substring(last, startOfOctets);
 
-            if (codepoint <= 0xFFFF)
-                decoded += c(codepoint);
-            else
-                decoded += c(
-                    (0xD7C0 + (codepoint >> 10)),
-                    (0xDC00 + (codepoint & 0x3FF))
-                );
+                if (codepoint <= 0xFFFF)
+                    decoded += c(codepoint);
+                else
+                    decoded += c(
+                        (0xD7C0 + (codepoint >> 10)),
+                        (0xDC00 + (codepoint & 0x3FF))
+                    );
 
-            codepoint = 0;
-            last = percentPosition + 3;
-            percentPosition = startOfOctets = uri.indexOf('%', last);
+                codepoint = 0;
+                last = percentPosition + 1;
+                startOfOctets = uri.indexOf('%', last);
+                percentPosition = startOfOctets;
+                continue;
+
+            case 0: return uri;
+            default:
+                ++percentPosition;
+
+                if (
+                    percentPosition < uri.length
+                    && uri.charCodeAt(percentPosition) === 37
+                ) continue;
+
+                return uri;
         }
-        else if (state === 0) return uri;
-        else {
-            percentPosition += 3;
-            if (
-                percentPosition < uri.length
-                && uri.charCodeAt(percentPosition) === 37
-            ) continue;
-
-            return uri;
-        }
-    }
+    } while (percentPosition !== -1);
 
     return decoded + uri.substring(last);
 }
@@ -116,8 +123,8 @@ const HEX = {
     'F': 15
 }
 
-function hexCodeToInt(c: string, shift: number) {
-    if (c in HEX)
-        return HEX[c] << shift;
-    return 255;
-}
+//function hexCodeToInt(c: string, shift: number) {
+  //  if (c in HEX)
+    //    return HEX[c] << shift;
+    //return 255;
+//}
