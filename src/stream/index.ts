@@ -16,7 +16,7 @@ const getfile = globalThis.Bun?.file;
  * @param options File loading options
  * @returns A middleware
  */
-export function file(des: string, options?: ResponseInit): Handler<any, Dict<any>> {
+export function file(des: string, options?: ResponseInit): Handler<any> {
     des = resolve(des);
     if (!statSync(des).isFile()) throw new Error('Path must be a file. For serving directory, use `dir()` with wildcard routes instead');
 
@@ -49,7 +49,7 @@ export function group(dir: string, options?: StreamOptions) {
  *
  * This function should be used with `@stricjs/router` wildcard routes
  */
-export function dir(des: string, options?: StreamOptions): Handler<any, Dict<any>> {
+export function dir(des: string, options?: StreamOptions): Handler<any> {
     des = resolve(des);
     if (!statSync(des).isDirectory()) throw new Error('Path must be a directory');
 

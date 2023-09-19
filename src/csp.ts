@@ -33,9 +33,7 @@ export namespace CSP {
          */
         readonly src?: {
             [key in FetchDirective]?: OptionValue;
-        } & {
-            [key: string]: OptionValue;
-        }
+        } & Dict<OptionValue>
 
         /**
          * Enables a sandbox for the requested resource

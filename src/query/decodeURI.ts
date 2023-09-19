@@ -51,24 +51,25 @@ export function decodeURIComponent(uri: string) {
         startOfOctets = percentPosition,
         state = 12,
         // Loop stuff
-        byte: number, type: number;
+        byte: number;
 
     do {
+        // High
         ++percentPosition;
         byte = uri[percentPosition] in HEX ? (HEX[uri[percentPosition]] << 4) : 255;
 
+        // Low
         ++percentPosition;
         byte = byte | (uri[percentPosition] in HEX ? HEX[uri[percentPosition]] : 255);
 
-        type = UTF8_DATA[byte];
-        state = UTF8_DATA[256 + state + type];
-        codepoint = (codepoint << 6) | (byte & UTF8_DATA[364 + type]);
+        state = UTF8_DATA[256 + state + UTF8_DATA[byte]];
+        codepoint = (codepoint << 6) | (byte & UTF8_DATA[364 + UTF8_DATA[byte]]);
 
         switch (state) {
             case 12:
                 decoded += uri.substring(last, startOfOctets);
 
-                if (codepoint <= 0xFFFF)
+                if (codepoint < 65536)
                     decoded += c(codepoint);
                 else
                     decoded += c(
@@ -80,6 +81,7 @@ export function decodeURIComponent(uri: string) {
                 last = percentPosition + 1;
                 startOfOctets = uri.indexOf('%', last);
                 percentPosition = startOfOctets;
+
                 continue;
 
             case 0: return uri;
@@ -121,10 +123,4 @@ const HEX = {
     'E': 14,
     'f': 15,
     'F': 15
-}
-
-//function hexCodeToInt(c: string, shift: number) {
-  //  if (c in HEX)
-    //    return HEX[c] << shift;
-    //return 255;
-//}
+};

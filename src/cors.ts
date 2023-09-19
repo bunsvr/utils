@@ -1,5 +1,5 @@
 import { Plugin } from "@stricjs/router";
-import { createExtendFunction, EmptyObject } from "./helpers";
+import { createCopy, createExtendFunction, EmptyObject } from "./helpers";
 
 /**
  * All request methods
@@ -88,12 +88,12 @@ class CORS {
             setHeader(headers, 'Access-Control-Allow-Methods', options.allowMethods);
 
         this.headers = headers;
-        this.composeCheck(this.headers);
+        this.compose(this.headers);
 
         if (!this.check) this.check = () => headers;
     }
 
-    composeCheck(headers: Dict<string>) {
+    compose(headers: Dict<string>) {
         let origins = this.options.allowOrigins;
         if (!origins || origins.length === 0 || origins === '*') return;
 
@@ -105,13 +105,15 @@ class CORS {
             return;
         }
 
-        const body = `return function(r){const c=new E;${createExtendFunction(headers, 'a', 'c')}`
+        const body = `return function(r){const c=${JSON.stringify(headers)};`
             + `switch(r){${origins.map(a => `case '${a}':`).join('')}`
             + `c['Access-Control-Allow-Origin']=r;break;`
             + `default:c['Access-Control-Allow-Origin']='${origins[0]}'}`
             + `c.Vary='Origin';return c}`;
 
+        // Compose functions
         this.check = Function('a', 'E', body)(headers, EmptyObject);
+        this.copy = createCopy(headers);
     }
 
     /**
@@ -126,7 +128,7 @@ class CORS {
                 + `switch(c.url.substring(c.url.indexOf(':',4)+3,c.path-1)){${origins.map(a =>
                     `case'${a}':c.head['Access-Control-Allow-Origin']='${a}';break;`
                 ).join('')}`
-                + `default:c.head.['Access-Control-Allow-Origin']='${origins[0]}'}`
+                + `default:c.head.['Access-Control-Allow-Origin']='${origins[0]}';break}`
                 + `c.head.Vary='Origin'}`;
 
         return Function('a', 'E', body)(this.headers, EmptyObject);
@@ -135,11 +137,11 @@ class CORS {
     /**
      * Return a plugin to guard a path
      */
-    guard<I extends Dict<any> = Dict<any>>(path: string): Plugin<I> {
+    guard(path: string): Plugin {
         let origins = this.options.allowOrigins;
         if (!Array.isArray(origins)) return null;
 
-        let body = `if(!('head'in c))c.head=new E;${createExtendFunction(this.headers, 'a', 'c.head')}`
+        let body = `c.head=${JSON.stringify(this.headers)};`
             + `switch(c.url.substring(c.url.indexOf(':',4)+3,c.path-1)){${origins.map(a =>
                 `case'${a}':c.head['Access-Control-Allow-Origin']='${a}';break;`
             ).join('')}`
@@ -156,6 +158,12 @@ class CORS {
      */
     /* @ts-ignore */
     check(requestOrigin: string): CORS.Headers;
+
+    /**
+     * Return a copy of the headers 
+     */
+    /* @ts-ignore */
+    copy(): CORS.Headers;
 }
 
 export { CORS };

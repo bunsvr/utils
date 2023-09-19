@@ -104,25 +104,29 @@ export namespace qs {
     export function searchKey<T extends number = 1>(
         key: string,
         maxValues: T = 1 as any
-    ): Parser<string> | Parser<FixedSizeArray<T, string>> {
+    ): Parser<string> | Parser<FixedSizeArray<T, string> | null> {
         key = encodeURIComponent(key) + '=';
 
         let body = 'return function(_)', noMaxVal = maxValues === 1, len = key.length;
         body += noMaxVal
             ? (
-                '{let i=_.url.indexOf(k,_.query+1);if(i===-1)return null;'
+                `{let i=_.url.indexOf('${key}',_.query+1);if(i===-1)return null;`
                 + `i+=${len};const j=_.url.indexOf('&',i);return j===-1?_.url.substring(i):_.url.substring(i,j)}`
             ) : (
-                '{const r=new Array(m);let i=0,j=_.url.indexOf(k,_.query+1),e;'
-                + `while(j!==-1&&i<m){`
+                `{let j=_.url.indexOf('${key}',_.query+1);`
+                + `if(j===-1)return null;`
+                + `let r=new Array(${maxValues}),i=0,e;`
+                + `do{`
                 + `j+=${len};e=_.url.indexOf('&',j);`
-                + `if(e===-1){r[i]=_.url.substring(j);return r;}`
-                + `r[i]=_.url.substring(j,e);++i;j=_.url.indexOf(k,e+1);`
-                + `}`
-                + 'return r;}'
+                + `if(e===-1){r[i]=_.url.substring(j);return r}`
+                + `r[i]=_.url.substring(j,e);`
+                + `if(i===${maxValues - 1})return r;`
+                + `j=_.url.indexOf('${key}',e+1);`
+                + `if(j===-1)return r;++i`
+                + `}while(true)}`
             );
 
-        return (noMaxVal ? Function('k', body) : Function('k', 'm', body))(key, maxValues);
+        return Function(body)();
     }
 }
 
