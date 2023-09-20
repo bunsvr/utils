@@ -61,10 +61,8 @@ test('Email', () => {
 });
 
 test('Register types', () => {
-    guard.register('fn', (v: any) => typeof v === 'function');
-    // @ts-ignore
-    const check = guard.create('fn');
-    console.log(check.toString())
+    const check = guard.create(v => typeof v === 'function');
+    console.log(check.toString());
 
     expect(check(() => { })).not.toBeNil();
 });

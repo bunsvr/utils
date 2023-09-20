@@ -4,6 +4,7 @@ export namespace guard {
         regexVarPrefix = '_r',
         snumFnName = '_f',
         arrayFnName = '_a',
+        fnVarPrefix = '_n',
         validator = {
             str: (currentPropName: string) => `typeof ${currentPropName}==='string'`,
             num: (currentPropName: string) => `typeof ${currentPropName}==='number'`,
@@ -42,7 +43,7 @@ export namespace guard {
         }
     );
 
-    export type Validator = Dict<Validator> | BasicType | OptionalBasicType | RegExp;
+    export type Validator = Dict<Validator> | BasicType | OptionalBasicType | RegExp | ((...args: any[]) => any);
 
     // Actual code 
     const basicArgs = [snumFnName, arrayFnName], basicValidator = [Number.isFinite, Array.isArray];
@@ -63,14 +64,7 @@ export namespace guard {
     function createCheck(
         type: Validator, propName: string, deps: Dict<any>
     ): string {
-        if (typeof type === 'string' && type in validator) {
-            if (type === 'email') deps._hasEmail = true;
-
-            return getCheckStr(type, propName);
-        }
-
         if (type instanceof RegExp) {
-            if (!('_regexIndex' in deps)) deps._regexIndex = 0;
             const name = regexVarPrefix + deps._regexIndex;
 
             deps[name] = type;
@@ -87,6 +81,22 @@ export namespace guard {
 
             return vld;
         }
+
+        if (typeof type === 'function') {
+            const name = fnVarPrefix + deps._index;
+
+            deps[name] = type;
+            ++deps._index;
+
+            return `${name}(${propName})`;
+        }
+
+        if (type in validator) {
+            if (type === 'email') deps._hasEmail = true;
+
+            return getCheckStr(type, propName);
+        }
+
 
         if (type[0] === '?') {
             const parentObjEndIndex = propName.lastIndexOf('.'), subProp = propName.substring(parentObjEndIndex + 1);
@@ -106,8 +116,11 @@ export namespace guard {
      * Create a request validator
      */
     export function create<T extends Validator>(type: T, yieldValue: boolean = true): (o?: any) => Infer<T> | null {
-        let deps = {}, body = `return function(${defaultPropName
+        let deps = { _index: 0, _regexIndex: 0 }, body = `return function(${defaultPropName
             }){return ${createCheck(type, defaultPropName, deps)}${yieldValue ? '?o:null' : ''}}`;
+
+        delete deps._index;
+        delete deps._regexIndex;
 
         if ('_hasEmail' in deps) {
             let emailCheckFn = checkEmail.toString();
@@ -117,8 +130,6 @@ export namespace guard {
 
             delete deps._hasEmail;
         }
-
-        if ('_regexIndex' in deps) delete deps._regexIndex;
 
         return Function(...Object.keys(deps), ...basicArgs, body)(...Object.values(deps), ...basicValidator);
     }
