@@ -1,6 +1,4 @@
 import { EmptyObject } from '../helpers';
-import { decodeURIComponent as decode } from './decodeURI';
-
 const plusRegex = /\+/g;
 
 type FixedSizeArray<N extends number, T> = N extends 0 ? never[] : {
@@ -16,13 +14,11 @@ export namespace qs {
     export function parse<T extends Record<string, any> = Record<string, string | string[]>>(input: string): T {
         const result = new EmptyObject;
         let key = '', value = '', startingIndex = -1, equalityIndex = -1, shouldDecodeKey = false, shouldDecodeValue = false,
-            keyHasPlus = false, valueHasPlus = false, hasBothKeyValuePair = false, charCode = 0, i = 0;
+            keyHasPlus = false, valueHasPlus = false, hasBothKeyValuePair = false, i = 0;
         // Have a boundary of input.length + 1 to access last pair inside the loop.
         while (i <= input.length) {
-            if (i === input.length) charCode = 38;
-            else charCode = input.charCodeAt(i);
             // Handle '&' and end of line to pass the current values to result
-            switch (charCode) {
+            switch (i === input.length ? 38 : input.charCodeAt(i)) {
                 case 38:
                     hasBothKeyValuePair = equalityIndex > startingIndex;
                     // Optimization: Reuse equality index to store the end of key
@@ -33,11 +29,11 @@ export namespace qs {
                         // Optimization: Replace '+' with space
                         if (keyHasPlus) key = key.replace(plusRegex, ' ');
                         // Optimization: Do not decode if it's not necessary.
-                        if (shouldDecodeKey) key = decode(key);
+                        if (shouldDecodeKey) key = decodeURIComponent(key);
                         if (hasBothKeyValuePair) {
                             value = input.substring(equalityIndex + 1, i);
                             if (valueHasPlus) value = value.replace(plusRegex, ' ');
-                            if (shouldDecodeValue) value = decode(value);
+                            if (shouldDecodeValue) value = decodeURIComponent(value);
                         }
                         const currentValue = result[key];
                         if (currentValue === undefined) result[key] = value;
@@ -70,6 +66,7 @@ export namespace qs {
             }
             ++i;
         }
+
         return result as T;
     }
 
@@ -132,4 +129,3 @@ export namespace qs {
 
 // Alias
 export const query = qs.parse;
-export * from './decodeURI';

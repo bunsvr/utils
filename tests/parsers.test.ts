@@ -2,6 +2,8 @@
 import { expect, test } from 'bun:test';
 import { qs } from '..';
 
+console.log(qs);
+
 test('Query parser', () => {
     const str = 'name=a&name=b&age=20';
     expect(qs.parse(str)).toEqual({
@@ -24,4 +26,4 @@ test('Key query parser multiple values', () => {
 
     // @ts-ignore
     expect(parse({ url: 'name=a&o=a&name=b', query: -1 })).toEqual(['a', 'b']);
-})
+});

@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 import {
     createCopy, createExtend, createHead, createHTML, writeHead,
-    decodeURIComponent, extend, html, leftPad, response
+    extend, html, leftPad, response
 } from '..';
 
 test('HTML', async () => {
@@ -28,10 +28,6 @@ test('Predefined response', async () => {
 
 test('Left pad', () => {
     expect(leftPad('str', 2, ' ')).toBe('  str');
-});
-
-test('Decode URI', () => {
-    expect(decodeURIComponent('Hi%20there')).toBe('Hi there');
 });
 
 test('Extend', () => {
