@@ -3,12 +3,20 @@ import { statSync } from 'fs';
 import { resolve } from 'path';
 import searchFiles from './searchFiles';
 
-export interface StreamOptions extends ResponseInit {
-    doParsePath?: boolean,
-    root?: string,
-}
+export type CommonExtension = '.html' | '.htm' | '.xhtml' | '.pdf' | '.xml' | '.json' | (string & {});
 
-const getfile = globalThis.Bun?.file;
+export interface StreamOptions extends ResponseInit {
+    root?: string,
+    /**
+     * Extensions for shorthand like `/a.html` -> `/a`.
+     * Specified extensions should start with `.`.
+     */
+    extensions?: CommonExtension[];
+    /**
+     * Choose the mode to select the file
+     */
+    select?: 'all' | 'extensions';
+}
 
 /**
  * Serve a file 
@@ -20,7 +28,7 @@ export function file(des: string, options?: ResponseInit): Handler<any> {
     des = resolve(des);
     if (!statSync(des).isFile()) throw new Error('Path must be a file. For serving directory, use `dir()` with wildcard routes instead');
 
-    return Function('g', 'o', `return function(){return new Response(g('${des}')${options ? ',o' : ''})}`)(getfile, options);
+    return Function('g', 'o', `return function(){return new Response(g('${des}')${options ? ',o' : ''})}`)(globalThis.Bun.file, options);
 };
 
 /**
@@ -32,14 +40,40 @@ export function group(dir: string, options?: StreamOptions) {
     dir = resolve(dir);
     if (!dir.endsWith('/')) dir += '/';
 
-    const { doParsePath = true, root = '/', ...rest } = options || {};
+    const { root = '/', extensions = ['.html'], select = 'all', ...rest } = options || {};
     options = rest;
 
-    const group = new Group(root);
+    const group = new Group(root),
+        selectExtension = select === 'extensions';
 
-    let pair: [relative: string, absolute: string];
-    for (pair of searchFiles(dir))
-        group.get(pair[0], file(pair[1], options));
+    let pair: [relative: string, absolute: string],
+        relativ: string, handler: Handler, ext: string,
+        shortPath: string, hasExt: boolean;
+
+    for (pair of searchFiles(dir)) {
+        hasExt = false;
+        relativ = pair[0];
+
+        // File system routing with Stric router
+        for (ext of extensions)
+            if (relativ.endsWith(ext)) {
+                hasExt = true;
+
+                // Normal shorthand handler
+                shortPath = relativ.substring(0, relativ.length - ext.length);
+                group.get(shortPath, handler);
+
+                // Index to /
+                if (shortPath.endsWith('index'))
+                    group.get(shortPath.substring(0, shortPath.length - 5), handler);
+            }
+
+        if (selectExtension && !hasExt) continue;
+
+        // Normal handler
+        handler = file(pair[1], options);
+        group.get(pair[0], handler);
+    }
 
     return group;
 }
@@ -58,5 +92,5 @@ export function dir(des: string, options?: StreamOptions): Handler<any> {
     des = `const f=a('${des}'+c.params['*']);return f.exists().then`
         + `(function(_){return _?new Response(f${options ? ',b' : ''}):null})`;
 
-    return Function('a', 'b', `return function(c){${des}}`)(getfile, options);
+    return Function('a', 'b', `return function(c){${des}}`)(globalThis.Bun.file, options);
 }

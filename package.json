@@ -9,8 +9,7 @@
     "bun-types": "latest",
     "typescript": "^4.9.4",
     "mitata": "^0.1.6",
-    "@stricjs/router": "^4.2.2",
-    "buchta": "latest"
+    "@stricjs/router": "^4.2.2"
   },
   "description": "Utilities for parsing and handling requests",
   "type": "module",

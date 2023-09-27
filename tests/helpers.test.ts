@@ -13,7 +13,9 @@ test('HTML', async () => {
 });
 
 test('Predefined response', async () => {
-    let obj = { 'a': 'b' }, objRes: (...args: any[]) => Response = response(obj);
+    let obj = { 'a': 'b' }, objRes: (...args: any[]) => Response = response(obj, {
+        headers: { 'Content-Type': 'application/json' }, status: 404
+    });
 
     expect(await objRes().json()).toEqual(obj);
 

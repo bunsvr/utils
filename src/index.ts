@@ -11,3 +11,5 @@ export * from './auth/basic';
 export * from './auth/bearer';
 
 export * from './helpers';
+
+export * from './template';
