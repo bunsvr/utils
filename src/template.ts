@@ -1,5 +1,5 @@
 function isValidVar(ch: number) {
-    return ch == 32 || ch == 95 || (ch > 64 && ch < 91) || (ch > 96 && ch < 123);
+    return ch === 32 || ch === 58 || ch === 95 || (ch > 64 && ch < 91) || (ch > 96 && ch < 123);
 }
 
 /**
@@ -24,8 +24,8 @@ export namespace template {
 
     export type Infer<T extends string> = T extends `${infer Start}${typeof startChars}${infer N}${typeof endChar}${infer Rest}`
         ? (
-            Trim<N> extends `${infer K} ${infer T}`
-            ? { [key in K]: InferType<T> }
+            Trim<N> extends `${infer K}:${infer T}`
+            ? { [key in Trim<K>]: InferType<Trim<T>> }
             : { [key in Trim<N>]: any }
         ) & Infer<Rest> & Infer<Start> : {};
 
@@ -48,15 +48,17 @@ export namespace template {
             }
 
             // Get name and type
-            params = html.substring(st, ed).trim().split(' ');
-            paramName = parentObjName + '.' + params[0];
-            paramType = params[1];
+            params = html.substring(st, ed).trim().split(':');
+            paramName = parentObjName + '.' + params[0].trim();
+
+            if (!params[1])
+                throw new Error('A type must be specified for key ' + paramName);
+
+            paramType = params[1].trim();
 
             // Check for type to parse
-            if (!paramType)
-                throw new Error('A type must be specified for key ' + paramName);
             switch (paramType) {
-                case 'obj': paramName = `JSON.stringify(${paramName})`; break;
+                case 'obj': paramName = `s(${paramName})`; break;
             }
 
             // Push the name of the var
@@ -73,6 +75,6 @@ export namespace template {
         else
             body += '"' + html.substring(prv) + '"';
 
-        return Function(`return function(${parentObjName}){return${body}}`)();
+        return Function('s', `return ${parentObjName}=>${body}`)(JSON.stringify);
     }
 }

@@ -105,8 +105,8 @@ class CORS {
             return;
         }
 
-        const body = `return function(r){const c=${JSON.stringify(headers)};`
-            + `switch(r){${origins.map(a => `case '${a}':`).join('')}`
+        const body = `return r=>{const c=${JSON.stringify(headers)};`
+            + `switch(r){${origins.map(a => `case'${a}':`).join('')}`
             + `c['Access-Control-Allow-Origin']=r;break;`
             + `default:c['Access-Control-Allow-Origin']='${origins[0]}'}`
             + `c.Vary='Origin';return c}`;
@@ -124,7 +124,7 @@ class CORS {
         if (!Array.isArray(origins)) return null;
 
         const assignBody = createExtendFunction(this.headers, 'a', 'c.head'),
-            body = `return function(c){${assignBody}`
+            body = `return c=>{${assignBody}`
                 + `switch(c.url.substring(c.url.indexOf(':',4)+3,c.path-1)){${origins.map(a =>
                     `case'${a}':c.head['Access-Control-Allow-Origin']='${a}';break;`
                 ).join('')}`
@@ -148,7 +148,7 @@ class CORS {
             + `default:c.head.['Access-Control-Allow-Origin']='${origins[0]}';break`
             + `}c.head.Vary='Origin'`;
 
-        return app => app.guard(path, Function('a', 'E', `return function(c){${body}}`)(this.headers, EmptyObject))
+        return app => app.guard(path, Function('a', 'E', `c=>{${body}}`)(this.headers, EmptyObject))
     }
 
     /**

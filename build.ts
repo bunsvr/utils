@@ -7,7 +7,7 @@ Bun.build({
     outdir: '.',
     minify: true,
     entrypoints: ['./src/index.ts'],
-    external: ['@stricjs/router', 'buchta']
+    external: ['@stricjs/router']
 });
 
 // Generating types

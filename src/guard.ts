@@ -116,8 +116,8 @@ export namespace guard {
      * Create a request validator
      */
     export function create<T extends Validator>(type: T, yieldValue: boolean = true): (o?: any) => Infer<T> | null {
-        let deps = { _index: 0, _regexIndex: 0 }, body = `return function(${defaultPropName
-            }){return ${createCheck(type, defaultPropName, deps)}${yieldValue ? '?o:null' : ''}}`;
+        let deps = { _index: 0, _regexIndex: 0 }, body = `return ${defaultPropName
+            }=>${createCheck(type, defaultPropName, deps)}${yieldValue ? '?o:null' : ''}`;
 
         delete deps._index;
         delete deps._regexIndex;

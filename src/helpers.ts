@@ -28,7 +28,7 @@ export function createHTML(options: ResponseInit, html?: string) {
     const staticHTMLExists = !!html, args = ['o'];
     if (staticHTMLExists) args.push('r');
 
-    args.push(`return function(${staticHTMLExists ? '' : 'r'}){return new Response(r,o);}`);
+    args.push(`return ${staticHTMLExists ? '()' : 'r'}=>new Response(r,o)`);
 
     return Function(...args)(options, html);
 }
@@ -71,7 +71,7 @@ export function response(serializable: any, options?: ResponseInit): () => Respo
         values.push(options);
     }
 
-    args.push(`return function(){return new Response(${isObj ? 'd' : serializable}${optionsExists ? ',o' : ''})}`);
+    args.push(`return ()=>new Response(${isObj ? 'd' : serializable}${optionsExists ? ',o' : ''})`);
     return Function(...args)(...values);
 }
 
@@ -99,7 +99,7 @@ export function createHead(options: ResponseInit): (body: ResponseBody, options:
     if (headers !== null)
         headersFn = `if(!('headers'in o))o.headers=new E;` + createExtendFunction(headers, 'd.headers', 'o.headers');
 
-    return Function('d', 'E', `return function(b,o){${assignFn}${headersFn}return new Response(b,o)}`)(options, EmptyObject);
+    return Function('d', 'E', `return (b,o)=>{${assignFn}${headersFn}return new Response(b,o)}`)(options, EmptyObject);
 }
 
 /**
@@ -170,14 +170,14 @@ export function createExtendFunction(b: any, sourceName: string, targetName: str
  * This optimization only works with object that has string keys
  */
 export function createExtend(b: any): (a: any) => void {
-    return Function('b', `return function(a){${createExtendFunction(b, 'b', 'a')}}`)(b);
+    return Function('b', `return a=>{${createExtendFunction(b, 'b', 'a')}}`)(b);
 }
 
 /**
  * Return a function to create a copy of an object
  */
 export function createCopy<T>(o: T): () => T {
-    return Function(`return function(){return ${JSON.stringify(o)}}`)();
+    return Function(`return ()=>(${JSON.stringify(o)})`)();
 }
 
 /**

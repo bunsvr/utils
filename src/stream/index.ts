@@ -28,7 +28,7 @@ export function file(des: string, options?: ResponseInit): Handler<any> {
     des = resolve(des);
     if (!statSync(des).isFile()) throw new Error('Path must be a file. For serving directory, use `dir()` with wildcard routes instead');
 
-    return Function('g', 'o', `return function(){return new Response(g('${des}')${options ? ',o' : ''})}`)(globalThis.Bun.file, options);
+    return Function('g', 'o', `return ()=>new Response(g('${des}')${options ? ',o' : ''})`)(globalThis.Bun.file, options);
 };
 
 /**
@@ -90,7 +90,7 @@ export function dir(des: string, options?: StreamOptions): Handler<any> {
     if (des.at(-1) != '/') des += '/';
 
     des = `const f=a('${des}'+c.params['*']);return f.exists().then`
-        + `(function(_){return _?new Response(f${options ? ',b' : ''}):null})`;
+        + `(_=>_?new Response(f${options ? ',b' : ''}):null)`;
 
-    return Function('a', 'b', `return function(c){${des}}`)(globalThis.Bun.file, options);
+    return Function('a', 'b', `return c=>{${des}}`)(globalThis.Bun.file, options);
 }

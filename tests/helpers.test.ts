@@ -13,7 +13,7 @@ test('HTML', async () => {
 });
 
 test('Predefined response', async () => {
-    let obj = { 'a': 'b' }, objRes: (...args: any[]) => Response = response(obj, {
+    let obj = { 'a': 'b' }, objRes: any = response(obj, {
         headers: { 'Content-Type': 'application/json' }, status: 404
     });
 
