@@ -28,7 +28,7 @@ export function file(des: string, options?: ResponseInit): Handler<any> {
     des = resolve(des);
     if (!statSync(des).isFile()) throw new Error('Path must be a file. For serving directory, use `dir()` with wildcard routes instead');
 
-    return Function('g', 'o', `return ()=>new Response(g('${des}')${options ? ',o' : ''})`)(globalThis.Bun.file, options);
+    return Function('g', 'o', `return ()=>new Response(g(\`${des}\`)${options ? ',o' : ''})`)(globalThis.Bun.file, options);
 };
 
 /**
@@ -53,6 +53,7 @@ export function group(dir: string, options?: StreamOptions) {
     for (pair of searchFiles(dir)) {
         hasExt = false;
         relativ = pair[0];
+        handler = file(pair[1], options);
 
         // File system routing with Stric router
         for (ext of extensions)
@@ -61,18 +62,17 @@ export function group(dir: string, options?: StreamOptions) {
 
                 // Normal shorthand handler
                 shortPath = relativ.substring(0, relativ.length - ext.length);
-                group.get(shortPath, handler);
+                group.all(shortPath, handler);
 
                 // Index to /
                 if (shortPath.endsWith('index'))
-                    group.get(shortPath.substring(0, shortPath.length - 5), handler);
+                    group.all(shortPath.substring(0, shortPath.length - 5), handler);
             }
 
         if (selectExtension && !hasExt) continue;
 
         // Normal handler
-        handler = file(pair[1], options);
-        group.get(pair[0], handler);
+        group.all(pair[0], handler);
     }
 
     return group;
