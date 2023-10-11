@@ -103,7 +103,8 @@ export function createHead(options: ResponseInit): (body: ResponseBody, options:
 }
 
 /**
- * Left pad.
+ * Left pad. This does not validate input so it can run 
+ * into an infinite loop if `cnt` is smaller than `0`
  *
  * This is the left pad algorithm by Travvy
  */

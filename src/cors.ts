@@ -1,5 +1,4 @@
-import { Plugin } from "@stricjs/router";
-import { createCopy, createExtendFunction, EmptyObject } from "./helpers";
+import { createCopy, EmptyObject } from "./helpers";
 
 /**
  * All request methods
@@ -69,7 +68,7 @@ class CORS {
      * @param options CORS options
      */
     constructor(public readonly options: CORS.Options = {}) {
-        const headers: CORS.Headers = {};
+        const headers: CORS.Headers = new EmptyObject;
 
         if (options.maxAge)
             headers['Access-Control-Max-Age'] = String(options.maxAge);
@@ -88,82 +87,52 @@ class CORS {
             setHeader(headers, 'Access-Control-Allow-Methods', options.allowMethods);
 
         this.headers = headers;
-        this.compose(this.headers);
+        this.head = createCopy(headers);
 
-        if (!this.check) this.check = () => headers;
+        // Same function cuz it does not depends on the origin passed in
+        if (!this.compose(headers))
+            this.check = this.head;
     }
 
     compose(headers: Dict<string>) {
-        let origins = this.options.allowOrigins;
-        if (!origins || origins.length === 0 || origins === '*') return;
+        const origins = this.options.allowOrigins, originIsStr = typeof origins === 'string';
+        if (!origins || origins.length === 0 || origins === '*') return false;
 
-        if (origins && origins.length === 1) origins = origins[0];
+        headers.Vary = 'Origin';
+        headers['Access-Control-Allow-Origin'] = originIsStr ? origins : origins[0];
 
-        if (typeof origins === 'string') {
-            headers['Access-Control-Allow-Origin'] = origins;
-            headers.Vary = 'Origin';
-            return;
+        // Access-Control-Allow-Origin is not needed to be set dynamically in this case
+        if (originIsStr || origins.length === 1) return false;
+
+        let body = `return r=>{const c=${JSON.stringify(headers)};switch(r){`;
+
+        // Get the case statement check 
+        let i = 1;
+        while (i < origins.length) {
+            body += `case'${origins[i]}':`;
+            ++i;
         }
 
-        const body = `return r=>{const c=${JSON.stringify(headers)};`
-            + `switch(r){${origins.map(a => `case'${a}':`).join('')}`
-            + `c['Access-Control-Allow-Origin']=r;break;`
-            + `default:c['Access-Control-Allow-Origin']='${origins[0]}'}`
-            + `c.Vary='Origin';return c}`;
+        body += `c['Access-Control-Allow-Origin']=r;break}return c}`;
 
         // Compose functions
-        this.check = Function('a', 'E', body)(headers, EmptyObject);
-        this.copy = createCopy(headers);
+        this.check = Function(body)();
+        return true;
     }
+}
 
-    /**
-     * Create check for request
-     */
-    create(): (ctx: Request) => void {
-        let origins = this.options.allowOrigins;
-        if (!Array.isArray(origins)) return null;
-
-        const assignBody = createExtendFunction(this.headers, 'a', 'c.head'),
-            body = `return c=>{${assignBody}`
-                + `switch(c.url.substring(c.url.indexOf(':',4)+3,c.path-1)){${origins.map(a =>
-                    `case'${a}':c.head['Access-Control-Allow-Origin']='${a}';break;`
-                ).join('')}`
-                + `default:c.head.['Access-Control-Allow-Origin']='${origins[0]}';break}`
-                + `c.head.Vary='Origin'}`;
-
-        return Function('a', 'E', body)(this.headers, EmptyObject);
-    }
-
-    /**
-     * Return a plugin to guard a path
-     */
-    guard(path: string): Plugin {
-        let origins = this.options.allowOrigins;
-        if (!Array.isArray(origins)) return null;
-
-        let body = `c.head=${JSON.stringify(this.headers)};`
-            + `switch(c.url.substring(c.url.indexOf(':',4)+3,c.path-1)){${origins.map(a =>
-                `case'${a}':c.head['Access-Control-Allow-Origin']='${a}';break;`
-            ).join('')}`
-            + `default:c.head.['Access-Control-Allow-Origin']='${origins[0]}';break`
-            + `}c.head.Vary='Origin'`;
-
-        return app => app.guard(path, Function('a', 'E', `c=>{${body}}`)(this.headers, EmptyObject))
-    }
-
+interface CORS {
     /**
      * Return CORS headers including 'Access-Control-Allow-Origin'
      * @param requestOrigin The origin to check
      * @returns The CORS headers
      */
-    /* @ts-ignore */
     check(requestOrigin: string): CORS.Headers;
 
     /**
      * Return a copy of the headers 
      */
-    /* @ts-ignore */
-    copy(): CORS.Headers;
+    head(): CORS.Headers;
 }
 
 export { CORS };

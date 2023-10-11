@@ -58,7 +58,7 @@ export namespace template {
 
             // Check for type to parse
             switch (paramType) {
-                case 'obj': paramName = `s(${paramName})`; break;
+                case 'obj': paramName = `JSON.stringify(${paramName})`; break;
             }
 
             // Push the name of the var
@@ -75,6 +75,6 @@ export namespace template {
         else
             body += '"' + html.substring(prv) + '"';
 
-        return Function('s', `return ${parentObjName}=>${body}`)(JSON.stringify);
+        return Function(`return ${parentObjName}=>${body}`)();
     }
 }

@@ -15,7 +15,7 @@ export interface StreamOptions extends ResponseInit {
     /**
      * Choose the mode to select the file
      */
-    select?: 'all' | 'extensions';
+    select?: 'all' | 'extensions' | RegExp;
 }
 
 /**
@@ -44,13 +44,17 @@ export function group(dir: string, options?: StreamOptions) {
     options = rest;
 
     const group = new Group(root),
-        selectExtension = select === 'extensions';
+        selectExtension = select === 'extensions',
+        isRegex = select instanceof RegExp;
 
     let pair: [relative: string, absolute: string],
         relativ: string, handler: Handler, ext: string,
         shortPath: string, hasExt: boolean;
 
     for (pair of searchFiles(dir)) {
+        // Skip if the file path does not match the extension
+        if (isRegex && !select.test(pair[1])) continue;
+
         hasExt = false;
         relativ = pair[0];
         handler = file(pair[1], options);
@@ -69,10 +73,12 @@ export function group(dir: string, options?: StreamOptions) {
                     group.all(shortPath.substring(0, shortPath.length - 5), handler);
             }
 
-        if (selectExtension && !hasExt) continue;
-
-        // Normal handler
-        group.all(pair[0], handler);
+        // Select extension
+        if (selectExtension) {
+            if (!hasExt) continue;
+        } else
+            // Normal handler 
+            group.all(pair[0], handler);
     }
 
     return group;
