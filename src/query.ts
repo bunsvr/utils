@@ -1,4 +1,4 @@
-import { EmptyObject } from '../helpers';
+import { EmptyObject } from './helpers';
 const plusRegex = /\+/g;
 
 type FixedSizeArray<N extends number, T> = N extends 0 ? never[] : {
