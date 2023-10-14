@@ -123,7 +123,7 @@ export function leftPad(str: string, cnt: number, literal: string): string {
  * Extend an object. Faster than spread and `Object.assign`
  */
 export function extend(target: any, source: any): void {
-    let k: any;
+    var k: any;
     for (k in source) target[k] = source[k];
 }
 
@@ -131,7 +131,7 @@ export function extend(target: any, source: any): void {
  * Create a null prototype object and assign keys of a and b to that object
  */
 export function extendClone<A, B>(a: A, b: B): A & B {
-    let o = new EmptyObject, k: any;
+    var o = new EmptyObject, k: any;
     for (k in a) o[k] = a[k];
     for (k in b) o[k] = b[k];
     return o;
@@ -157,8 +157,7 @@ export function createExtendFunction(b: any, sourceName: string, targetName: str
         if (typeof value !== 'object' && typeof value !== 'function') {
             if (typeof value === 'string') fn += `'${value}'`;
             else fn += String(value);
-        }
-        else fn += sourceName + key;
+        } else fn += sourceName + key;
 
         fn += ';';
     }

@@ -12,8 +12,7 @@ export namespace qs {
      * @param input 
      */
     export function parse<T extends Record<string, any> = Record<string, string | string[]>>(input: string): T {
-        const result = new EmptyObject;
-        let key = '', value = '', startingIndex = -1, equalityIndex = -1, shouldDecodeKey = false, shouldDecodeValue = false,
+        var result = new EmptyObject, key = '', value = '', startingIndex = -1, equalityIndex = -1, shouldDecodeKey = false, shouldDecodeValue = false,
             keyHasPlus = false, valueHasPlus = false, hasBothKeyValuePair = false, i = 0;
         // Have a boundary of input.length + 1 to access last pair inside the loop.
         while (i <= input.length) {
@@ -104,15 +103,15 @@ export namespace qs {
     ): Parser<string> | Parser<FixedSizeArray<T, string> | null> {
         key = encodeURIComponent(key) + '=';
 
-        let body = 'return function(_)', noMaxVal = maxValues === 1, len = key.length;
+        let body = 'return _=>', noMaxVal = maxValues === 1, len = key.length;
         body += noMaxVal
             ? (
-                `{let i=_.url.indexOf('${key}',_.query+1);if(i===-1)return null;`
-                + `i+=${len};const j=_.url.indexOf('&',i);return j===-1?_.url.substring(i):_.url.substring(i,j)}`
+                `{var i=_.url.indexOf('${key}',_.query+1);if(i===-1)return null;`
+                + `i+=${len};var j=_.url.indexOf('&',i);return j===-1?_.url.substring(i):_.url.substring(i,j)}`
             ) : (
-                `{let j=_.url.indexOf('${key}',_.query+1);`
+                `{var j=_.url.indexOf('${key}',_.query+1);`
                 + `if(j===-1)return null;`
-                + `let r=new Array(${maxValues}),i=0,e;`
+                + `var r=new Array(${maxValues}),i=0,e;`
                 + `do{`
                 + `j+=${len};e=_.url.indexOf('&',j);`
                 + `if(e===-1){r[i]=_.url.substring(j);return r}`
