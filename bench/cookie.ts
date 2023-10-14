@@ -22,7 +22,8 @@ bench('noop', () => { });
 bench('noop', () => { });
 
 // Main stuff goes here
-const str = 'a= b;  b=c ;  c=d ; p=d  ;  averylongkey=alongvalueas well ';
+const str = 'a= b;  b=c ;  c=d ; p=d  ;  averylongkey=alongvalueas well ;'
+    + 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaa aaaaaaaa =bbbbbbbbbbbbbbbbbbbb bbbbb; c=ooooooooooooooooooo';
 
 // Parse cookie using split
 function split(str: string) {
