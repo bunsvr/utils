@@ -12,4 +12,4 @@ tsconfig.json
 typedoc.json
 tests
 build.ts
-microbench
+bench

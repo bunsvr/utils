@@ -13,3 +13,5 @@ export * from './auth/bearer';
 export * from './helpers';
 
 export * from './template';
+
+export * from './cookie';

@@ -104,7 +104,7 @@ class CORS {
         // Access-Control-Allow-Origin is not needed to be set dynamically in this case
         if (originIsStr || origins.length === 1) return false;
 
-        let body = `return r=>{const c=${JSON.stringify(headers)};switch(r){`;
+        let body = `return r=>{var c=${JSON.stringify(headers)};switch(r){`;
 
         // Get the case statement check 
         let i = 1;
