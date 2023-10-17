@@ -23,7 +23,7 @@ bench('noop', () => { });
 
 // Main stuff goes here
 const str = 'a= b;  b=c ;  c=d ; p=d  ;  averylongkey=alongvalueas well ;'
-    + 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaa aaaaaaaa =bbbbbbbbbbbbbbbbbbbb bbbbb; c=ooooooooooooooooooo';
+    + 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaa aaaaaaaa =bbbbbbbbbbbbbbbbbbbb bbbbb; c';
 
 // Parse cookie using split
 function split(str: string) {
@@ -34,6 +34,8 @@ function split(str: string) {
 
         if (sp.length === 2)
             o[sp[0].trim()] = sp[1].trim();
+        else
+            o[sp[0].trim()] = true;
     }
 
     return o;
