@@ -105,5 +105,4 @@ function setFn(key: string, value: string | true) {
     return this;
 }
 
-
 export const cookie = cs.parse;
