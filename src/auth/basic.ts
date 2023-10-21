@@ -1,19 +1,25 @@
 export type BasicCredentials = [username: string, password: string];
 
-export function extractBasic(headerVal: string): BasicCredentials | null {
-    if (headerVal.startsWith('Basic ')) {
-        const credentials = headerVal.substring(6), splitter = credentials.indexOf(':');
-        if (splitter === -1) return null;
-        return [credentials.substring(0, splitter), credentials.substring(splitter + 1)];
+export function extractBasic(header: string): BasicCredentials | null {
+    if (header.startsWith('Basic ')) {
+        var sp = header.indexOf(':', 6);
+        if (sp === -1) return null;
+
+        return [
+            header.substring(6, sp),
+            header.substring(sp + 1)
+        ];
     }
+
     return null;
 }
 
 export function basic(req: Request): BasicCredentials | null {
-    let headerValue = req.headers.get('Authorization');
-    if (headerValue === null) {
-        headerValue = req.headers.get('Proxy-Authorization');
-        if (headerValue === null) return null;
+    var str = req.headers.get('Authorization');
+    if (str === null) {
+        str = req.headers.get('Proxy-Authorization');
+        if (str === null) return null;
     }
-    return extractBasic(headerValue);
+
+    return extractBasic(str);
 }
