@@ -38,7 +38,12 @@ export class Func<T, R, I = T> {
                 body += `${name}(x).then(_)`;
 
                 names.push('_');
-                values.push(this.build(index + 1));
+
+                const fn = this.build(index + 1);
+                values.push(
+                    // Chain a then function
+                    _ => _ === null ? null : fn(_)
+                );
 
                 return wrap(body, names, values);
             }
