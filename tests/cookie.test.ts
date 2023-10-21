@@ -12,7 +12,7 @@ test('Cookie builder', () => {
     const Cookie = new cs.Builder({
         secure: true,
         sameSite: 'strict'
-    }).build();
+    }).create();
 
     const cookie = new Cookie()
         .set('a', 'b')

@@ -1,3 +1,4 @@
+import { Context } from '@stricjs/router';
 import { EmptyObject } from './helpers';
 const plusRegex = /\+/g;
 
@@ -6,9 +7,11 @@ type FixedSizeArray<N extends number, T> = N extends 0 ? never[] : {
     length: N;
 } & ReadonlyArray<T>;
 
+const strPrototypeAt = String.prototype.at;
+
 export namespace qs {
     /**
-     * Parse a query
+     * Parse a query. This function is faster than native `URLSearchParams` for simple queries
      * @param input 
      */
     export function parse<T extends Record<string, any> = Record<string, string | string[]>>(input: string): T {
@@ -34,12 +37,14 @@ export namespace qs {
                             if (valueHasPlus) value = value.replace(plusRegex, ' ');
                             if (shouldDecodeValue) value = decodeURIComponent(value);
                         }
-                        const currentValue = result[key];
-                        if (currentValue === undefined) result[key] = value;
-                        else {
-                            if (currentValue.pop === undefined) result[key] = [currentValue, value];
-                            else currentValue.push(value);
-                        }
+
+                        // Set the result
+                        if (key in result) {
+                            if (result[key].at === strPrototypeAt)
+                                result[key] = [result[key], value];
+                            else
+                                result[key].push(value);
+                        } else result[key] = value;
                     }
                     // Reset reading key value pairs
                     value = '';
@@ -123,6 +128,13 @@ export namespace qs {
             );
 
         return Function(body)();
+    }
+
+    /**
+     * Get the query string from a Stric context object. The query string does not contain `?`
+     */
+    export function string(c: Context) {
+        return c.url.substring(c.query + 1);
     }
 }
 

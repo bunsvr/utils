@@ -89,7 +89,7 @@ export namespace cs {
         }
 
         // Create another instance
-        build(): new () => Cookie {
+        create(): new () => Cookie {
             function C() { };
             C.prototype = Object.create(null);
             C.prototype.value = this.value;

@@ -90,21 +90,21 @@ class CORS {
         this.head = createCopy(headers);
 
         // Same function cuz it does not depends on the origin passed in
-        if (!this.compose(headers))
+        if (this.build() === null)
             this.check = this.head;
     }
 
-    compose(headers: Dict<string>) {
+    build() {
         const origins = this.options.allowOrigins, originIsStr = typeof origins === 'string';
-        if (!origins || origins.length === 0 || origins === '*') return false;
+        if (!origins || origins.length === 0 || origins === '*') return null;
 
-        headers.Vary = 'Origin';
-        headers['Access-Control-Allow-Origin'] = originIsStr ? origins : origins[0];
+        this.headers.Vary = 'Origin';
+        this.headers['Access-Control-Allow-Origin'] = originIsStr ? origins : origins[0];
 
         // Access-Control-Allow-Origin is not needed to be set dynamically in this case
         if (originIsStr || origins.length === 1) return false;
 
-        let body = `return r=>{var c=${JSON.stringify(headers)};switch(r){`;
+        let body = `return r=>{var c=${JSON.stringify(this.headers)};switch(r){`;
 
         // Get the case statement check 
         let i = 1;
@@ -117,7 +117,6 @@ class CORS {
 
         // Compose functions
         this.check = Function(body)();
-        return true;
     }
 }
 
