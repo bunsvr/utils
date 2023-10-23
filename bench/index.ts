@@ -22,8 +22,7 @@ bench('noop', () => { });
 bench('noop', () => { });
 
 // Main stuff goes here
-const str = 'a= b;  b=c ;  c=d ; p=d  ;  averylongkey=alongvalueas well ;'
-    + 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaa aaaaaaaa =bbbbbbbbbbbbbbbbbbbb bbbbb; c';
+const str = 'a= b;  b=c ;  c=d ; p=d ';
 
 // Parse cookie using split
 function split(str: string) {
@@ -43,11 +42,16 @@ function split(str: string) {
 
 // Check whether results matched first
 const resSplit = split(str), resCookie = cookie(str);
-console.log(resCookie, resSplit);
+console.log(resSplit, resCookie);
 
-for (const o in resSplit)
-    if (resSplit[o] !== resCookie[o])
-        throw new Error('Invalid implementation!');
+// Validate the result
+function compare(a: any, b: any) {
+    for (const o in a)
+        if (a[o] !== b[o])
+            throw new Error('Invalid implementation!');
+}
+
+compare(resSplit, resCookie);
 
 // Main bench
 group('Cookie', () => {

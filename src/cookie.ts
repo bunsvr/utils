@@ -1,4 +1,4 @@
-import { EmptyObject, isVariable } from "./helpers";
+import { EmptyObject } from "./helpers";
 
 export namespace cs {
     /**
@@ -9,7 +9,7 @@ export namespace cs {
     /**
      * Parse a cookie header into an object
      */
-    export declare function parse(cookie: string): Dict<Value>;
+    export declare function parse<V extends Dict<Value> = Dict<Value>>(cookie: string): V;
     /**
      * All cookie options
      */
@@ -83,36 +83,6 @@ export namespace cs {
             // @ts-ignore
             return C;
         }
-    }
-
-    /**
-     * Create a parser using linear check
-     */
-    export function parser<Keys extends string[]>(...keys: Keys): (req: Request) => Record<Keys[number], Value | null> | null {
-        // Initialize prototype
-        let key: string, P = function() { }, accessor: string;
-        P.prototype = new EmptyObject;
-        for (key of keys)
-            P.prototype[key] = null;
-
-        let body = `return r=>{`, started = false;
-
-        // Validation
-        body += `var s=r.headers.get('Cookie');if(s===null)return null;`;
-
-        // Search every key
-        body += `var o=new C,k,e,p=s.split(';');for(k of p){k=k.trimStart();`
-
-        for (key of keys) {
-            body += (started ? 'else ' : '') + `if(k.startsWith('${key}')){e=k.indexOf('=',${key.length});`;
-            accessor = isVariable.test(key) ? '.' + key : `['${key}']`;
-
-            body += `o${accessor}=e===-1||k.substring(e+1).trim()}`;
-            started = true;
-        }
-
-        body += '}return o}';
-        return Function('C', body)(P);
     }
 }
 

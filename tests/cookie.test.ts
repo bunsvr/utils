@@ -6,18 +6,6 @@ test('Cookie parser', () => {
         name: 'reve',
         id: '1'
     });
-
-    const parse = cs.parser('a', 'b');
-    console.log(parse.toString());
-
-    expect(parse(
-        new Request('http://localhost', {
-            headers: { Cookie: 'a;b=a' }
-        })
-    )).toEqual({
-        a: true,
-        b: 'a'
-    });
 });
 
 test('Cookie builder', () => {
