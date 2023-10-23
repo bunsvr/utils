@@ -1,23 +1,31 @@
-export namespace guard {
-    const defaultPropName = 'o',
-        emailFnName = '_e',
-        regexVarPrefix = '_r',
-        snumFnName = '_f',
-        arrayFnName = '_a',
-        fnVarPrefix = '_n',
-        validator = {
-            str: (currentPropName: string) => `typeof ${currentPropName}==='string'`,
-            num: (currentPropName: string) => `typeof ${currentPropName}==='number'`,
-            snum: (currentPropName: string) => `${snumFnName}(${currentPropName})`,
-            bool: (currentPropName: string) => `typeof ${currentPropName}==='boolean'`,
-            undef: (currentPropName: string) => `${currentPropName}===undefined`,
-            nil: (currentPropName: string) => `${currentPropName}===null`,
-            obj: (currentPropName: string) => `typeof ${currentPropName}==='object'&&${currentPropName}!==null`,
-            sobj: (currentPropName: string) => `${validator.obj(currentPropName)}&&!${arrayFnName}(currentPropName)`,
-            email: (currentPropName: string) => `${validator.str(currentPropName)}&&${emailFnName}(${currentPropName})`
-        };
+// Arrow functions execute faster
+const checkEmail = (email: string) => {
+    let i = email.indexOf('@');
+    if (i === -1 || email.charCodeAt(i + 1) === 46)
+        return false;
 
-    // For infer types
+    i = email.indexOf('.', i + 2);
+    return i !== -1 && i !== email.length - 1;
+},
+    defaultPropName = 'o',
+    emailFnName = '_e',
+    regexVarPrefix = '_r',
+    snumFnName = '_f',
+    arrayFnName = '_a',
+    fnVarPrefix = '_n',
+    validator = {
+        str: (currentPropName: string) => `typeof ${currentPropName}==='string'`,
+        num: (currentPropName: string) => `typeof ${currentPropName}==='number'`,
+        snum: (currentPropName: string) => `${snumFnName}(${currentPropName})`,
+        bool: (currentPropName: string) => `typeof ${currentPropName}==='boolean'`,
+        undef: (currentPropName: string) => `${currentPropName}===undefined`,
+        nil: (currentPropName: string) => `${currentPropName}===null`,
+        obj: (currentPropName: string) => `typeof ${currentPropName}==='object'&&${currentPropName}!==null`,
+        sobj: (currentPropName: string) => `${validator.obj(currentPropName)}&&!${arrayFnName}(currentPropName)`,
+        email: (currentPropName: string) => `${validator.str(currentPropName)}&&${emailFnName}(${currentPropName})`
+    };
+
+export namespace guard {
     export type BasicType = keyof typeof validator;
 
     type SuffixQuestionMark<T extends string> = `?${T}`;
@@ -47,15 +55,6 @@ export namespace guard {
 
     // Actual code 
     const basicArgs = [snumFnName, arrayFnName], basicValidator = [Number.isFinite, Array.isArray];
-
-    function checkEmail(email: string) {
-        let i = email.indexOf('@');
-        if (i === -1 || email.charCodeAt(i + 1) === 46)
-            return false;
-
-        i = email.indexOf('.', i + 2);
-        return i !== -1 && i !== email.length - 1;
-    }
 
     function getCheckStr(name: string, prop: string) {
         return validator[name](prop);
@@ -124,8 +123,7 @@ export namespace guard {
 
         if ('_hasEmail' in deps) {
             let emailCheckFn = checkEmail.toString();
-            emailCheckFn = `function ${emailFnName}${emailCheckFn.substring(emailCheckFn.indexOf('('))
-                };`;
+            emailCheckFn = `const ${emailFnName}=${emailCheckFn};`;
             body = emailCheckFn + body;
 
             delete deps._hasEmail;

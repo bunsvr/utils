@@ -78,7 +78,7 @@ export namespace CSP {
         if (!opts)
             return "default-src 'self'";
 
-        let headerValue = "";
+        var headerValue = '';
 
         if (opts.src)
             for (const name in opts.src)
@@ -105,6 +105,8 @@ export namespace CSP {
         if (opts.navigate)
             headerValue += getHeader(opts.navigate, "navigate-to");
 
-        return headerValue;
+        return headerValue.endsWith(';')
+            ? headerValue.substring(0, headerValue.length - 1)
+            : headerValue;
     }
 }

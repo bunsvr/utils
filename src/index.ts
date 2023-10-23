@@ -7,8 +7,7 @@ export * from './stream';
 
 export * from './guard';
 
-export * from './auth/basic';
-export * from './auth/bearer';
+export * from './auth';
 
 export * from './helpers';
 export * from './fn';

@@ -50,7 +50,7 @@ declare namespace CORS {
     };
 }
 
-function setHeader(headers: object, name: string, value: string | string[]) {
+const setHeader = (headers: object, name: string, value: string | string[]) => {
     if (!Array.isArray(value))
         value = [value];
 

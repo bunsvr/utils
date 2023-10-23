@@ -13,13 +13,3 @@ export function extractBasic(header: string): BasicCredentials | null {
 
     return null;
 }
-
-export function basic(req: Request): BasicCredentials | null {
-    var str = req.headers.get('Authorization');
-    if (str === null) {
-        str = req.headers.get('Proxy-Authorization');
-        if (str === null) return null;
-    }
-
-    return extractBasic(str);
-}

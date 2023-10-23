@@ -1,5 +1,13 @@
-function isValidVar(ch: number) {
-    return ch === 32 || ch === 58 || ch === 95 || (ch > 64 && ch < 91) || (ch > 96 && ch < 123);
+const isValidVar = (ch: number) => {
+    switch (ch) {
+        case 32:
+        case 58:
+        case 95:
+            return true;
+
+        default:
+            return (ch > 64 && ch < 91) || (ch > 96 && ch < 123);
+    }
 }
 
 /**

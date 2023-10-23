@@ -9,71 +9,14 @@ type FixedSizeArray<N extends number, T> = N extends 0 ? never[] : {
 
 const strPrototypeAt = String.prototype.at;
 
+// Arrow functions run faster
+
 export namespace qs {
     /**
      * Parse a query. This function is faster than native `URLSearchParams` for simple queries
      * @param input 
      */
-    export function parse<T extends Record<string, any> = Record<string, string | string[]>>(input: string): T {
-        var result = new EmptyObject, key = '', value = '', startingIndex = -1, equalityIndex = -1, shouldDecodeKey = false, shouldDecodeValue = false,
-            keyHasPlus = false, valueHasPlus = false, hasBothKeyValuePair = false, i = 0;
-        // Have a boundary of input.length + 1 to access last pair inside the loop.
-        while (i <= input.length) {
-            // Handle '&' and end of line to pass the current values to result
-            switch (i === input.length ? 38 : input.charCodeAt(i)) {
-                case 38:
-                    hasBothKeyValuePair = equalityIndex > startingIndex;
-                    // Optimization: Reuse equality index to store the end of key
-                    if (!hasBothKeyValuePair) equalityIndex = i;
-                    key = input.substring(startingIndex + 1, equalityIndex);
-                    // Add key/value pair only if the range size is greater than 1; a.k.a. contains at least '='
-                    if (hasBothKeyValuePair || key.length > 0) {
-                        // Optimization: Replace '+' with space
-                        if (keyHasPlus) key = key.replace(plusRegex, ' ');
-                        // Optimization: Do not decode if it's not necessary.
-                        if (shouldDecodeKey) key = decodeURIComponent(key);
-                        if (hasBothKeyValuePair) {
-                            value = input.substring(equalityIndex + 1, i);
-                            if (valueHasPlus) value = value.replace(plusRegex, ' ');
-                            if (shouldDecodeValue) value = decodeURIComponent(value);
-                        }
-
-                        // Set the result
-                        if (key in result) {
-                            if (result[key].at === strPrototypeAt)
-                                result[key] = [result[key], value];
-                            else
-                                result[key].push(value);
-                        } else result[key] = value;
-                    }
-                    // Reset reading key value pairs
-                    value = '';
-                    startingIndex = equalityIndex = i;
-                    shouldDecodeKey = shouldDecodeValue = keyHasPlus = valueHasPlus = false;
-                    break;
-                // Check '='
-                case 61:
-                    if (equalityIndex <= startingIndex) equalityIndex = i;
-                    // If '=' character occurs again, we should decode the input.
-                    else shouldDecodeValue = true;
-                    break;
-                // Check '+', and remember to replace it with empty space.
-                case 43:
-                    if (equalityIndex > startingIndex) valueHasPlus = true;
-                    else keyHasPlus = true;
-                    break;
-                // Check '%' character for encoding
-                case 37:
-                    if (equalityIndex > startingIndex) shouldDecodeValue = true;
-                    else shouldDecodeKey = true;
-                    break;
-            }
-            ++i;
-        }
-
-        return result as T;
-    }
-
+    export declare function parse<T extends Record<string, any> = Record<string, string | string[]>>(input: string): T;
     /**
      * A query parser function
      */
@@ -133,10 +76,72 @@ export namespace qs {
     /**
      * Get the query string from a Stric context object. The query string does not contain `?`
      */
-    export function string(c: Context) {
-        return c.url.substring(c.query + 1);
-    }
+    export declare function string(c: Context): string;
 }
+
+qs.parse = input => {
+    var result = new EmptyObject, key = '', value = '', startingIndex = -1, //
+        equalityIndex = -1, shouldDecodeKey = false, shouldDecodeValue = false, //
+        keyHasPlus = false, valueHasPlus = false, hasBothKeyValuePair = false, i = 0;
+    // Have a boundary of input.length + 1 to access last pair inside the loop.
+    while (i <= input.length) {
+        // Handle '&' and end of line to pass the current values to result
+        switch (i === input.length ? 38 : input.charCodeAt(i)) {
+            case 38:
+                hasBothKeyValuePair = equalityIndex > startingIndex;
+                // Optimization: Reuse equality index to store the end of key
+                if (!hasBothKeyValuePair) equalityIndex = i;
+                key = input.substring(startingIndex + 1, equalityIndex);
+                // Add key/value pair only if the range size is greater than 1; a.k.a. contains at least '='
+                if (hasBothKeyValuePair || key.length > 0) {
+                    // Optimization: Replace '+' with space
+                    if (keyHasPlus) key = key.replace(plusRegex, ' ');
+                    // Optimization: Do not decode if it's not necessary.
+                    if (shouldDecodeKey) key = decodeURIComponent(key);
+                    if (hasBothKeyValuePair) {
+                        value = input.substring(equalityIndex + 1, i);
+                        if (valueHasPlus) value = value.replace(plusRegex, ' ');
+                        if (shouldDecodeValue) value = decodeURIComponent(value);
+                    }
+
+                    // Set the result
+                    if (key in result) {
+                        if (result[key].at === strPrototypeAt)
+                            result[key] = [result[key], value];
+                        else
+                            result[key].push(value);
+                    } else result[key] = value;
+                }
+                // Reset reading key value pairs
+                value = '';
+                startingIndex = equalityIndex = i;
+                shouldDecodeKey = shouldDecodeValue = keyHasPlus = valueHasPlus = false;
+                break;
+            // Check '='
+            case 61:
+                if (equalityIndex <= startingIndex) equalityIndex = i;
+                // If '=' character occurs again, we should decode the input.
+                else shouldDecodeValue = true;
+                break;
+            // Check '+', and remember to replace it with empty space.
+            case 43:
+                if (equalityIndex > startingIndex) valueHasPlus = true;
+                else keyHasPlus = true;
+                break;
+            // Check '%' character for encoding
+            case 37:
+                if (equalityIndex > startingIndex) shouldDecodeValue = true;
+                else shouldDecodeKey = true;
+                break;
+        }
+        ++i;
+    }
+
+    return result;
+}
+
+// Get the query string
+qs.string = c => c.url.substring(c.query + 1);
 
 // Alias
 export const query = qs.parse;

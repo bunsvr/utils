@@ -8,9 +8,7 @@ const htmlResOpts: ResponseInit = {
 /**
  * Create an HTML response
  */
-export function html(response: string) {
-    return new Response(response, htmlResOpts);
-};
+export const html = (response: string) => new Response(response, htmlResOpts);
 
 /**
  * Compose an html function
@@ -36,9 +34,7 @@ export function createHTML(options: ResponseInit, html?: string) {
 /**
  * Shorthand for sending a file as a response
  */
-export function sendFile(path: string) {
-    return new Response(Bun.file(path));
-}
+export const sendFile = (path: string) => new Response(Bun.file(path));
 
 /**
  * Create a response function
@@ -81,9 +77,7 @@ export type ResponseBody = ReadableStream<any> | BlobPart | BlobPart[] | FormDat
 /**
  * Prepare response options for responding
  */
-export function writeHead(options: ResponseInit) {
-    return (body: ResponseBody) => new Response(body, options);
-}
+export const writeHead = (options: ResponseInit) => (body: ResponseBody) => new Response(body, options);
 
 /**
  * Prepare response options for responding.
@@ -108,7 +102,7 @@ export function createHead(options: ResponseInit): (body: ResponseBody, options:
  *
  * This is the left pad algorithm by Travvy
  */
-export function leftPad(str: string, cnt: number, literal: string): string {
+export const leftPad = (str: string, cnt: number, literal: string): string => {
     let p = '';
     while (true) {
         if ((cnt & 1) === 1) p += literal;
@@ -122,7 +116,7 @@ export function leftPad(str: string, cnt: number, literal: string): string {
 /**
  * Extend an object. Faster than spread and `Object.assign`
  */
-export function extend(target: any, source: any): void {
+export const extend = (target: any, source: any): void => {
     var k: any;
     for (k in source) target[k] = source[k];
 }
@@ -130,14 +124,14 @@ export function extend(target: any, source: any): void {
 /**
  * Create a null prototype object and assign keys of a and b to that object
  */
-export function extendClone<A, B>(a: A, b: B): A & B {
+export const extendClone = <A, B>(a: A, b: B): A & B => {
     var o = new EmptyObject, k: any;
     for (k in a) o[k] = a[k];
     for (k in b) o[k] = b[k];
     return o;
 }
 
-const isVariable = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
+export const isVariable = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
 
 /**
  * Internal API to create an extend function body based on an object
@@ -149,9 +143,7 @@ export function createExtendFunction(b: any, sourceName: string, targetName: str
         value = b[key];
         if (value === undefined) continue;
 
-        if (isVariable.test(key)) key = '.' + key;
-        else key = `[\`${key}\`]`;
-
+        key = isVariable.test(key) ? '.' + key : `['${key}']`;
         fn += targetName + key + '=';
 
         if (typeof value !== 'object' && typeof value !== 'function') {
@@ -176,9 +168,7 @@ export function createExtend(b: any): (a: any) => void {
 /**
  * Return a function to create a copy of an object
  */
-export function createCopy<T>(o: T): () => T {
-    return Function(`return ()=>(${JSON.stringify(o)})`)();
-}
+export const createCopy = <T>(o: T): (() => T) => Function(`return ()=>(${JSON.stringify(o)})`)();
 
 /**
  * Create a null prototype object

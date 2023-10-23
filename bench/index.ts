@@ -79,4 +79,18 @@ group('Query', () => {
     });
 });
 
+group('Foreach', () => {
+    const a = 'a b cd ef gh idk uuuuuuuuuuuuuuuuuuuuuuuu ajanba nan ';
+
+    bench('No cache', () => {
+        let b: string;
+        for (b of a.split(' '));
+    });
+
+    bench('Cached', () => {
+        let b: string, c = a.split(' ');
+        for (b of c);
+    });
+});
+
 run();
