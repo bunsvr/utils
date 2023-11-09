@@ -42,10 +42,10 @@ export const sendFile = (path: string) => new Response(Bun.file(path));
 export function response(serializable: any, options?: ResponseInit): () => Response {
     const optionsExists = !!options,
         isObj = serializable && typeof serializable === 'object';
-    if (serializable === undefined) serializable = null;
 
+    if (serializable === undefined || serializable === null) serializable = null;
     // Serialize the object (don't put buffer and other related streams and stuff here pls)
-    if (isObj) {
+    else if (isObj) {
         if (serializable.toString === Object.prototype.toString) {
             serializable = JSON.stringify(serializable);
 
@@ -54,7 +54,7 @@ export function response(serializable: any, options?: ResponseInit): () => Respo
             options.headers ||= {};
             options.headers['Content-Type'] ||= 'application/json';
         } else serializable.toString();
-    } else serializable = String(serializable);
+    } else serializable = `'${serializable}'`;
 
     const args = [], values = [];
     if (isObj) {

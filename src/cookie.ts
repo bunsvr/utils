@@ -95,15 +95,16 @@ cs.parse = cookie => {
         eqIndex = str.indexOf('=');
         switch (eqIndex) {
             // No key
-            case 0: break;
+            case 0: continue;
 
             // No value specified
             case -1:
                 o[str.trim()] = true;
-                break;
+                continue;
 
             default:
                 o[str.substring(0, eqIndex).trim()] = str.substring(eqIndex + 1).trim();
+                continue;
         }
     }
 

@@ -16,14 +16,12 @@ test('Key query parser', () => {
     const parse = qs.searchKey('name');
     console.log(parse.toString());
 
-    // @ts-ignore
-    expect(parse({ url: 'a=d?name=b', query: -1 })).toBe('b');
+    expect(parse({ url: 'a=d?name=b', _pathEnd: -1 })).toBe('b');
 });
 
 test('Key query parser multiple values', () => {
     const parse = qs.searchKey('name', 2);
     console.log(parse.toString());
 
-    // @ts-ignore
-    expect(parse({ url: 'name=a&o=a&name=b', query: -1 })).toEqual(['a', 'b']);
+    expect(parse({ url: 'name=a&o=a&name=b', _pathEnd: -1 })).toEqual(['a', 'b']);
 });

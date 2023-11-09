@@ -1,4 +1,3 @@
-import { Context } from '@stricjs/router';
 import { EmptyObject } from './helpers';
 const plusRegex = /\+/g;
 
@@ -21,7 +20,10 @@ export namespace qs {
      * A query parser function
      */
     export interface Parser<T> {
-        (req: Request): T;
+        (req: {
+            url: string,
+            _pathEnd?: number
+        }): T;
     }
 
     /**
@@ -54,12 +56,12 @@ export namespace qs {
         let body = 'return _=>', noMaxVal = maxValues === 1, len = key.length;
         body += noMaxVal
             ? (
-                `{var i=_.url.indexOf('${key}',_.query+1);if(i===-1)return null;`
-                + `i+=${len};var j=_.url.indexOf('&',i);return j===-1?_.url.substring(i):_.url.substring(i,j)}`
+                `{let i=_.url.indexOf('${key}',_._pathEnd+1);if(i===-1)return null;`
+                + `i+=${len};let j=_.url.indexOf('&',i);return j===-1?_.url.substring(i):_.url.substring(i,j)}`
             ) : (
-                `{var j=_.url.indexOf('${key}',_.query+1);`
+                `{var j=_.url.indexOf('${key}',_._pathEnd+1);`
                 + `if(j===-1)return null;`
-                + `var r=new Array(${maxValues}),i=0,e;`
+                + `let r=new Array(${maxValues}),i=0,e;`
                 + `do{`
                 + `j+=${len};e=_.url.indexOf('&',j);`
                 + `if(e===-1){r[i]=_.url.substring(j);return r}`
@@ -76,7 +78,7 @@ export namespace qs {
     /**
      * Get the query string from a Stric context object. The query string does not contain `?`
      */
-    export declare function string(c: Context): string;
+    export declare function string(c: { url: string, _pathEnd?: number }): string;
 }
 
 qs.parse = input => {
@@ -141,7 +143,7 @@ qs.parse = input => {
 }
 
 // Get the query string
-qs.string = c => c.url.substring(c.query + 1);
+qs.string = c => c._pathEnd === -1 ? '' : c.url.substring(c._pathEnd + 1);
 
 // Alias
 export const query = qs.parse;
