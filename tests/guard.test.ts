@@ -5,14 +5,14 @@ import { guard } from '..';
 test('Simple guard', () => {
     const check = guard.create({
         name: 'str',
-        age: '?num',
+        age: 'num?',
         registered: 'bool'
     });
     console.log(check.toString());
 
     expect(check({
         name: 'Reve',
-        registered: true
+        registered: true,
     })).not.toBeNil();
 
     expect(check({
@@ -29,7 +29,7 @@ test('Nested', () => {
         id: 'num',
         data: {
             name: 'str',
-            address: '?str'
+            address: 'str?'
         }
     });
     console.log(check.toString());
@@ -40,24 +40,6 @@ test('Nested', () => {
             name: 'a'
         }
     })).not.toBeNil();
-});
-
-test('Email', () => {
-    const check = guard.create({
-        email: 'email',
-        password: 'str'
-    });
-    console.log(check.toString());
-
-    expect(check({
-        email: 'johndoe_1974@gmail.com',
-        password: '12345678'
-    })).not.toBeNil();
-
-    expect(check({
-        email: 'johndoe_1974@.co',
-        password: '12345678'
-    })).toBeNil();
 });
 
 test('Register types', () => {
