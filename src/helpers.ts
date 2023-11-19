@@ -1,19 +1,11 @@
-// ------- //
-// Helpers //
-// ------- //
-const htmlResOpts: ResponseInit = {
+const htmlOpts: ResponseInit = {
     headers: { 'Content-Type': 'text/html' }
 };
 
 /**
- * Create an HTML response
- */
-export const html = (response: string) => new Response(response, htmlResOpts);
-
-/**
  * Compose an html function
  */
-export function createHTML(options: ResponseInit): typeof html;
+export function createHTML(options: ResponseInit): (html: string) => Response;
 
 /**
  * Compose an html function with predefined body
@@ -21,7 +13,7 @@ export function createHTML(options: ResponseInit): typeof html;
 export function createHTML(options: ResponseInit, html: string): () => Response;
 export function createHTML(options: ResponseInit, html?: string) {
     options.headers ||= {};
-    Object.assign(options.headers, htmlResOpts);
+    Object.assign(options.headers, htmlOpts);
 
     const staticHTMLExists = !!html, args = ['o'];
     if (staticHTMLExists) args.push('r');
@@ -30,11 +22,6 @@ export function createHTML(options: ResponseInit, html?: string) {
 
     return Function(...args)(options, html);
 }
-
-/**
- * Shorthand for sending a file as a response
- */
-export const sendFile = (path: string) => new Response(Bun.file(path));
 
 /**
  * Create a response function
@@ -78,23 +65,6 @@ export type ResponseBody = ReadableStream<any> | BlobPart | BlobPart[] | FormDat
  * Prepare response options for responding
  */
 export const writeHead = (options: ResponseInit) => (body: ResponseBody) => new Response(body, options);
-
-/**
- * Prepare response options for responding.
- *
- * This will assign the headers, not overriding them.
- */
-export function createHead(options: ResponseInit): (body: ResponseBody, options: ResponseInit) => Response {
-    const { headers = null, ...rest } = options,
-        assignFn = createExtendFunction(rest, 'd', 'o');
-    options = rest;
-
-    let headersFn = '';
-    if (headers !== null)
-        headersFn = `if(!('headers'in o))o.headers=new E;` + createExtendFunction(headers, 'd.headers', 'o.headers');
-
-    return Function('d', 'E', `return (b,o)=>{${assignFn}${headersFn}return new Response(b,o)}`)(options, EmptyObject);
-}
 
 /**
  * Left pad. This does not validate input so it can run 
