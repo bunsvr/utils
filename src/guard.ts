@@ -108,8 +108,6 @@ export namespace guard {
         delete deps._index;
         delete deps._regexIndex;
 
-        console.log(body)
-
         return Function(...Object.keys(deps), ...basicArgs, body)(...Object.values(deps), ...basicValidator);
     }
 }
