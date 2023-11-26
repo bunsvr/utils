@@ -1,14 +1,12 @@
-import { Fn as BasicFn, Func as BasicFunc } from "./basic";
+import { type Func as ChainFunc, Chain } from './chain';
 
+// Declarations
 export namespace fn {
     /**
-     * Do basic chaining like checking with objects. Return `null` to end the process.
+     * Chain guard functions with type safety.
      */
-    export function basic<T>() {
-        return {
-            use<R>(f: BasicFn<T, R>) {
-                return new BasicFunc(f);
-            }
-        }
-    }
+    export declare function input<T>(fn: ChainFunc<any, T>): Chain<T>;
 }
+
+// Implementation
+fn.input = f => new Chain(f);
