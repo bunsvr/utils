@@ -64,6 +64,11 @@ class CORS {
     readonly headers: CORS.Headers;
 
     /**
+     * Whether headers can be sent directly without any checks
+     */
+    readonly static: boolean;
+
+    /**
      * Create an object to get CORS header
      * @param options CORS options
      */
@@ -90,10 +95,10 @@ class CORS {
         this.head = createCopy(headers);
 
         // Same function cuz it does not depends on the origin passed in
-        if (this.build() === null)
-            this.check = this.head;
+        this.static = this.build() === null;
     }
 
+    // Build the check function
     build() {
         const origins = this.options.allowOrigins, originIsStr = typeof origins === 'string';
         if (!origins || origins.length === 0 || origins === '*') return null;
@@ -132,6 +137,11 @@ interface CORS {
      * Return a copy of the headers 
      */
     head(): CORS.Headers;
+
+    /**
+     * Use this when you cannot determine all headers keys and values
+     */
+    put(headers: Headers): Headers;
 }
 
 export { CORS };

@@ -1,4 +1,4 @@
-class PropsBuilder<T extends object = {}> {
+class PropsBuilder<T extends Record<string, any> = {}> {
     props: Map<string, string> = new Map;
     infer: T = null;
 
