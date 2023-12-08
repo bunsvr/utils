@@ -1,7 +1,6 @@
 import { expect, test } from 'bun:test';
 import {
-    createCopy, createExtend, createHead, createHTML, writeHead,
-    extend, html, leftPad, response
+    createCopy, createExtend, createHTML, extend, leftPad
 } from '..';
 
 test('HTML', async () => {
@@ -9,23 +8,6 @@ test('HTML', async () => {
     const customHTML = createHTML({}, staticHTML);
 
     expect(await customHTML().text()).toBe(staticHTML);
-    expect(await html(staticHTML).text()).toBe(staticHTML);
-});
-
-test('Predefined response', async () => {
-    let obj = { 'a': 'b' }, objRes: any = response(obj, {
-        headers: { 'Content-Type': 'application/json' }, status: 404
-    });
-
-    expect(await objRes().json()).toEqual(obj);
-
-    objRes = createHead({ status: 404, headers: { 'Content-Type': 'text/plain' } });
-    console.log(objRes.toString());
-
-    expect(objRes('Hi', {}).headers.get('Content-Type')).toBe('text/plain');
-
-    objRes = writeHead({ status: 404 });
-    expect(objRes('Hi').status).toBe(404);
 });
 
 test('Left pad', () => {

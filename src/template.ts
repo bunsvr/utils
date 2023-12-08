@@ -67,6 +67,8 @@ export namespace template {
             // Check for type to parse
             switch (paramType) {
                 case 'obj': paramName = `JSON.stringify(${paramName})`; break;
+                case 'str': break;
+                default: paramName = `${paramName}.toString()`; break;
             }
 
             // Push the name of the var

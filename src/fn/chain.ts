@@ -4,6 +4,7 @@ export interface Func<Input, Output> {
 }
 
 type Unwrap<T> = T extends Promise<infer R> ? R : T;
+type Wrap<Input, T> = Input extends Promise<any> ? (T extends Promise<any> ? T : Promise<T>) : T;
 
 const
     vars = {
@@ -21,7 +22,6 @@ export class Chain<Output> {
     readonly names: string[];
     readonly args: string[];
 
-    // TODO: Make a list of fallback for each guard
     fallback: Func<any, any> = null;
 
     async: boolean;
@@ -38,7 +38,7 @@ export class Chain<Output> {
     /**
      * Chain another function
      */
-    then<T>(fn: Func<Unwrap<Output>, T>): Chain<T> {
+    then<T>(fn: Func<Unwrap<Output>, T>): Chain<Wrap<Output, T>> {
         if (fn.isAsync = fn.constructor.name === 'AsyncFunction')
             this.async = true;
 

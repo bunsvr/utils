@@ -62,11 +62,6 @@ export type BlobPart = string | Blob | BufferSource;
 export type ResponseBody = ReadableStream<any> | BlobPart | BlobPart[] | FormData | URLSearchParams;
 
 /**
- * Prepare response options for responding
- */
-export const writeHead = (options: ResponseInit) => (body: ResponseBody) => new Response(body, options);
-
-/**
  * Left pad. This does not validate input so it can run 
  * into an infinite loop if `cnt` is smaller than `0`
  *
@@ -89,16 +84,6 @@ export const leftPad = (str: string, cnt: number, literal: string): string => {
 export const extend = (target: any, source: any): void => {
     var k: any;
     for (k in source) target[k] = source[k];
-}
-
-/**
- * Create a null prototype object and assign keys of a and b to that object
- */
-export const extendClone = <A, B>(a: A, b: B): A & B => {
-    var o = new EmptyObject, k: any;
-    for (k in a) o[k] = a[k];
-    for (k in b) o[k] = b[k];
-    return o;
 }
 
 export const isVariable = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;

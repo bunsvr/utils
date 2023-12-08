@@ -9,9 +9,10 @@ export * from './guard';
 
 export * from './auth';
 
-export * from './helpers';
 export * from './fn';
 
 export * from './template';
 
 export * from './cookie';
+
+export * from './helpers';
