@@ -54,7 +54,7 @@ export namespace cs {
         }
 
         // Create another instance
-        create(): new () => Cookie {
+        init(): new () => Cookie {
             function C() { };
             C.prototype = Object.create(null);
             C.prototype.parts = this.parts;

@@ -5,7 +5,7 @@ test('Cookie builder', () => {
     const Cookie = new cs.Builder({
         secure: true,
         sameSite: 'Strict'
-    }).create();
+    }).init();
 
     const cookie = new Cookie()
         .set('a', 'b')
