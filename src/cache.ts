@@ -15,7 +15,7 @@ const builder = new PropsBuilder<boolean>()
     .put('staleIfError', 'stale-if-error')
     .reg('private', 'public', 'immutable');
 
-builder.separator = { kv: '=', end: ',' };
+builder.separator = { kv: '=', end: ',', multiValue: ' ' };
 
 type ControlOptionsInfer = typeof builder.infer;
 

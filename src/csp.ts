@@ -1,28 +1,45 @@
 import PropsBuilder from './internals/builder';
 
-const sep = { kv: ' ', end: ';' };
+const sep = { kv: ' ', end: ';', multiValue: ' ' };
 
 // Props that ends with 'src' goes here
-const srcBuilder = new PropsBuilder<CSP.OptionValue>().reg(
-    'child', 'connect', 'font', 'iframe', 'img',
-    'manifest', 'media', 'object', 'prefetch',
-    'script', 'style', 'worker', 'default'
-);
-srcBuilder.suffix = '-src';
+const srcBuilder = new PropsBuilder<CSP.Source>()
+    .put('default', 'default-src')
+    .put('child', 'child-src')
+    .put('connect', 'connect-src')
+    .put('font', 'font-src')
+    .put('img', 'img-src')
+    .put('manifest', 'manifest-src')
+    .put('media', 'media-src')
+    .put('object', 'object-src')
+
+    .put('script', 'script-src')
+    .put('scriptAttr', 'script-src-attr')
+    .put('scriptElem', 'script-src-elem')
+
+    .put('style', 'style-src')
+    .put('styleArr', 'style-src-attr')
+    .put('styleElem', 'style-src-elem');
+
 srcBuilder.separator = sep;
 
 type SrcInfer = typeof srcBuilder.infer;
 
 // Main builder
-const builder = new PropsBuilder<CSP.OptionValue>()
+const builder = new PropsBuilder<CSP.Source>()
     .skip('src')
-    .put('sandbox')
+    .put<'sandbox', boolean | `allow-${'downloads' | 'forms' | 'modals' |
+        'orientation-lock' | 'pointer-lock' |
+        `popups${'' | '-to-escape-sandbox'}` |
+        'presentation' | 'same-origin' |
+        'scripts' | `top-navigation${'' | '-by-user-activation'
+        | '-to-custom-protocols'
+        }`}`>('sandbox')
     .put('formAction', 'form-action')
     .put('frameAncestors', 'frame-ancestors')
-    .put('pluginTypes', 'plugin-types')
     .put('baseURI', 'base-uri')
-    .put('reportTo', 'report-to')
-    .put('navigateTo', 'navigate-to');
+    .put<'reportTo', string>('reportTo', 'report-to')
+
 builder.separator = sep;
 
 type OptionInfer = typeof builder.infer;
@@ -31,6 +48,37 @@ type OptionInfer = typeof builder.infer;
  * Content security policy namespace
  */
 export namespace CSP {
+    /**
+     * Sandbox value
+     */
+    export type SandboxValue = boolean | `allow-${'downloads' | 'forms' | 'modals' |
+        'orientation-lock' | 'pointer-lock' | `popups${'' | '-to-escape-sandbox'}` |
+        'presentation' | 'same-origin' | 'scripts' |
+        `top-navigation${'' | '-by-user-activation' | '-to-custom-protocols'}`}`;
+
+    /**
+     * A single source
+     */
+    export type SourceValue =
+        // Unsafe stuff
+        | `unsafe-${'eval' | 'hashes' | 'inline'
+        }`
+        // Nonce or hash algorithm followed by base64 value
+        | `${'nonce' | (string & {})}-${string}`
+        // Normal constant values
+        | 'strict-dynamic'
+        | 'report-sample'
+        | 'none'
+        | 'self'
+        | 'wasm-unsafe-eval'
+        // Custom value
+        | (string & {});
+
+    /**
+     * Single source or a list of sources
+     */
+    export type Source = SourceValue | SourceValue[];
+
     /**
      * Directive src value
      */

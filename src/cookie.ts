@@ -11,7 +11,7 @@ const builder = new PropsBuilder()
     .put('secure', 'Secure')
     .put<'sameSite', 'Strict' | 'Lax' | 'None'>('sameSite', 'SameSite');
 
-builder.separator = { kv: '=', end: ';' };
+builder.separator = { kv: '=', end: ';', multiValue: ' ' };
 
 type OptionsInfer = typeof builder.infer;
 

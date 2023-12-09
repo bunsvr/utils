@@ -10,7 +10,8 @@ class PropsBuilder<DefaultType = boolean, T extends Record<string, any> = {}> {
     // Separators
     separator = {
         kv: ' ',
-        end: ';'
+        end: ';',
+        multiValue: ' '
     }
 
     /**
@@ -41,6 +42,11 @@ class PropsBuilder<DefaultType = boolean, T extends Record<string, any> = {}> {
         return this;
     }
 
+    private parseValue(v: any): string {
+        if (typeof v === 'string') return v;
+        return Array.isArray(v) ? v.join(this.separator.multiValue) : v.toString();
+    }
+
     /**
      * Build into parts which can be joined
      */
@@ -60,7 +66,7 @@ class PropsBuilder<DefaultType = boolean, T extends Record<string, any> = {}> {
 
             parts.push(this.prefix, key, this.suffix);
             if (value !== true)
-                parts.push(this.separator.kv, value.toString());
+                parts.push(this.separator.kv, this.parseValue(value));
             parts.push(this.separator.end);
         }
 
