@@ -11,6 +11,8 @@ const builder = new PropsBuilder()
     .put('secure', 'Secure')
     .put<'sameSite', 'Strict' | 'Lax' | 'None'>('sameSite', 'SameSite');
 
+builder.separator = { kv: '=', end: ';' };
+
 type OptionsInfer = typeof builder.infer;
 
 export namespace cs {
@@ -48,7 +50,7 @@ export namespace cs {
         parts: string[];
 
         constructor(options: cs.Options = {}) {
-            this.parts = builder.build(options, '=', ';');
+            this.parts = builder.build(options);
         }
 
         // Create another instance
