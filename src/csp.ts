@@ -80,11 +80,6 @@ export namespace CSP {
     export type Source = SourceValue | SourceValue[];
 
     /**
-     * Directive src value
-     */
-    export type OptionValue = boolean | string | string[];
-
-    /**
      * All directives 
      */
     export interface Options extends OptionInfer {
