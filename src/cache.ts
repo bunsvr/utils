@@ -33,7 +33,7 @@ export namespace cache {
     /**
      * Create an ETag of a resource
      */
-    export declare function tag(data: string | TypedArray | DataView | ArrayBuffer | SharedArrayBuffer): number | bigint;
+    export declare function tag(data: string | TypedArray | DataView | ArrayBuffer | SharedArrayBuffer): string;
 }
 
 cache.control = opts => opts ? builder.build(opts).join('') : defaultValue;
@@ -44,6 +44,6 @@ cache.control = opts => opts ? builder.build(opts).join('') : defaultValue;
 
     if (hash) {
         const seed = performance.timeOrigin;
-        cache.tag = d => hash(d, seed);
+        cache.tag = d => hash(d, seed).toString();
     } else cache.tag = null;
 }
