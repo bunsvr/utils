@@ -1,5 +1,5 @@
 import { run, bench, group } from 'mitata';
-import { cookie, EmptyObject, qs } from '..';
+import { qs } from '..';
 
 // JIT bias
 bench('noop', () => { });
@@ -20,44 +20,6 @@ bench('noop', () => { });
 bench('noop', () => { });
 bench('noop', () => { });
 bench('noop', () => { });
-
-// Main stuff goes here
-const str = 'a= b;  b=c ;  c=d ; p=d ';
-
-// Parse cookie using split
-function split(str: string) {
-    var o = new EmptyObject, t: string, sp: string[];
-
-    for (t of str.split(';')) {
-        sp = t.split('=');
-
-        if (sp.length === 2)
-            o[sp[0].trim()] = sp[1].trim();
-        else
-            o[sp[0].trim()] = true;
-    }
-
-    return o;
-};
-
-// Check whether results matched first
-const resSplit = split(str), resCookie = cookie(str);
-console.log(resSplit, resCookie);
-
-// Validate the result
-function compare(a: any, b: any) {
-    for (const o in a)
-        if (a[o] !== b[o])
-            throw new Error('Invalid implementation!');
-}
-
-compare(resSplit, resCookie);
-
-// Main bench
-group('Cookie', () => {
-    bench('Split', () => split(str));
-    bench('Stric cookie', () => cookie(str));
-});
 
 group('Distinguish String & Arrays', () => {
     const a = 'str', b = ['a'], at = String.prototype.at;
@@ -95,6 +57,14 @@ group('Foreach', () => {
         let b: string, c = a.split(' ');
         for (b of c);
     });
+});
+
+group('Hash', () => {
+    const seed = performance.timeOrigin,
+        str = 'arandomstringthatisreallylong';
+
+    bench('No seed', () => Bun.hash(str));
+    bench('With seed', () => Bun.hash(str, seed));
 });
 
 run();
