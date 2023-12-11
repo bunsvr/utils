@@ -1,3 +1,5 @@
+import { TypeInfer, TypeKeys } from './types/typemap';
+
 // Arrow functions execute faster
 const
     defaultPropName = 'o',
@@ -5,7 +7,7 @@ const
     snumFnName = '_f',
     arrayFnName = '_a',
     fnVarPrefix = '_n',
-    validator = {
+    validator: Record<TypeKeys, any> = {
         str: (currentPropName: string) => `typeof ${currentPropName}==='string'`,
         num: (currentPropName: string) => `typeof ${currentPropName}==='number'`,
         snum: (currentPropName: string) => `${snumFnName}(${currentPropName})`,
@@ -17,32 +19,20 @@ const
     };
 
 export namespace guard {
-    export type BasicType = keyof typeof validator;
-
     type SuffixQuestionMark<T extends string> = `${T}?`;
 
     export type OptionalBasicType = keyof {
-        [K in BasicType as SuffixQuestionMark<K>]: null
+        [K in TypeKeys as SuffixQuestionMark<K>]: null
     };
 
-    type InferBasic<P> = P extends 'str' ? string : (
-        P extends 'num' ? number : (
-            P extends 'bool' ? boolean : (
-                P extends 'undef' ? undefined : (
-                    P extends 'nil' ? null : any
-                )
-            )
-        )
-    );
-
-    type InferOptionalBasic<T> = T extends `${infer U}?` ? InferBasic<U> | undefined : never;
-    export type Infer<T> = T extends BasicType ? InferBasic<T> : (
+    type InferOptionalBasic<T> = T extends `${infer U}?` ? TypeInfer<U> | undefined : never;
+    export type Infer<T> = T extends TypeKeys ? TypeInfer<T> : (
         T extends OptionalBasicType ? InferOptionalBasic<T> : {
             [K in keyof T]: Infer<T[K]>
         }
     );
 
-    export type Validator = Dict<Validator> | BasicType | OptionalBasicType | RegExp | ((...args: any[]) => any);
+    export type Validator = Dict<Validator> | TypeKeys | OptionalBasicType | RegExp | ((...args: any[]) => any);
 
     // Actual code 
     const basicArgs = [snumFnName, arrayFnName],

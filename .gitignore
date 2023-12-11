@@ -4,7 +4,4 @@ node_modules
 
 # Build
 index.js
-types
-
-# Buchta example
-.buchta
+/types
