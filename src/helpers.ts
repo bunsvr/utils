@@ -130,3 +130,31 @@ export const createCopy = <T>(o: T): (() => T) => Function(`return ()=>(${JSON.s
  */
 export function EmptyObject() { };
 EmptyObject.prototype = Object.create(null);
+
+const tagMap = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    "'": '&#39',
+    '"': '&quot;'
+}, tagFunc = (tag: string) => tagMap[tag];
+
+/**
+ * Escape HTML strings
+ */
+export const escapeHTML = globalThis.Bun ? Bun.escapeHTML : (str: string) => str.replace(/[&<>'"]/g, tagFunc);
+
+/**
+ * Tagged HTML template
+ */
+export const html = (strings: TemplateStringsArray, ...args: any[]) => {
+    let index = 0, parts = [];
+
+    while (index < args.length) {
+        parts.push(strings[index], escapeHTML(args[index]));
+        ++index;
+    }
+
+    parts.push(strings[index]);
+    return parts.join('');
+}

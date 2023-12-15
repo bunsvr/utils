@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 import {
-    createCopy, createExtend, createHTML, extend, leftPad
+    createCopy, createExtend, createHTML, extend, html, leftPad
 } from '..';
 
 test('HTML', async () => {
@@ -38,4 +38,8 @@ test('Copy', () => {
     console.log(copyObj.toString());
 
     expect(copyObj()).toEqual(source);
+});
+
+test('HTML', () => {
+    expect(html`<p>${0}</p>`).toBe('<p>0</p>');
 });
