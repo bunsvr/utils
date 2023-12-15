@@ -43,10 +43,10 @@ test('Nested', () => {
 });
 
 test('Register types', () => {
-    const check = guard.create(v => typeof v === 'function');
+    const check = guard.create(v => typeof v === 'number' ? v : null);
     console.log(check.toString());
 
-    expect(check(() => { })).not.toBeNil();
+    expect(check(9)).not.toBeNil();
 });
 
 test('RegExp', () => {
