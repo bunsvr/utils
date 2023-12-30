@@ -1,5 +1,6 @@
 /// <reference types='bun-types' />
 import { existsSync, rmSync } from 'fs';
+import pkg from './package.json';
 
 Bun.build({
     format: 'esm',
@@ -7,6 +8,7 @@ Bun.build({
     outdir: '.',
     minify: true,
     entrypoints: ['./src/index.ts'],
+    external: Object.keys(pkg.devDependencies)
 });
 
 // Generating types

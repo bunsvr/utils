@@ -2,10 +2,20 @@ import { EmptyObject } from './helpers';
 import type { Context } from '@stricjs/app';
 const plusRegex = /\+/g;
 
-type FixedSizeArray<N extends number, T> = N extends 0 ? never[] : {
-    0: T;
-    length: N;
-} & ReadonlyArray<T>;
+// Surely I didn't copy it from StackOverflow
+type Shift<A extends Array<any>> =
+    ((...args: A) => void) extends ((...args: [A[0], ...infer R]) => void) ? R : never;
+
+type GrowExpRev<A extends any[], N extends number, P extends any[][]> =
+    A['length'] extends N ? A : [...A, ...P[0]][N] extends undefined ? GrowExpRev<[...A, ...P[0]], N, P> : GrowExpRev<A, N, Shift<P>>;
+
+type GrowExp<A extends any[], N extends number, P extends any[][], L extends number = A['length']> =
+    L extends N ? A : L extends 8192 ? any[] : [...A, ...A][N] extends undefined ? GrowExp<[...A, ...A], N, [A, ...P]> : GrowExpRev<A, N, P>;
+
+type MapItemType<T, I> = { [K in keyof T]: I };
+
+export type FixedSizeArray<N extends number, T> =
+    N extends 0 ? [] : MapItemType<GrowExp<[0], N, []>, T>;
 
 const strPrototypeAt = String.prototype.at,
     ctx = '_',
@@ -71,8 +81,6 @@ export namespace qs {
                 + `if(j===-1)return r;++i`
                 + `}while(true)}`
             );
-
-        console.log(body)
 
         return Function(body)();
     }
@@ -144,8 +152,8 @@ qs.parse = input => {
     return result;
 }
 
-// @ts-ignore Get the query string
-qs.string = c => c._pathEnd === -1 ? '' : c.req.url.substring(c._pathEnd + 1);
+// Get the query string
+qs.string = c => c.req.url.substring(c._pathEnd + 1);
 
 // Alias
 export const query = qs.parse;
