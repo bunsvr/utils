@@ -1,4 +1,5 @@
 import { EmptyObject } from './helpers';
+import type { Context } from '@stricjs/app';
 const plusRegex = /\+/g;
 
 type FixedSizeArray<N extends number, T> = N extends 0 ? never[] : {
@@ -6,10 +7,12 @@ type FixedSizeArray<N extends number, T> = N extends 0 ? never[] : {
     length: N;
 } & ReadonlyArray<T>;
 
-const strPrototypeAt = String.prototype.at;
-
+const strPrototypeAt = String.prototype.at,
+    ctx = '_',
+    pathEnd = ctx + '._pathEnd',
+    req = ctx + '.req',
+    reqURL = req + '.url';
 // Arrow functions run faster
-
 export namespace qs {
     /**
      * Parse a query. This function is faster than native `URLSearchParams` for simple queries
@@ -20,10 +23,7 @@ export namespace qs {
      * A query parser function
      */
     export interface Parser<T> {
-        (req: {
-            url: string,
-            _pathEnd?: number
-        }): T;
+        (req: Context): T;
     }
 
     /**
@@ -53,24 +53,26 @@ export namespace qs {
     ): Parser<string> | Parser<FixedSizeArray<T, string> | null> {
         key = encodeURIComponent(key) + '=';
 
-        let body = 'return _=>', noMaxVal = maxValues === 1, len = key.length;
+        let body = `return ${ctx}=>`, noMaxVal = maxValues === 1, len = key.length;
         body += noMaxVal
             ? (
-                `{let i=_.url.indexOf('${key}',_._pathEnd+1);if(i===-1)return null;`
-                + `i+=${len};let j=_.url.indexOf('&',i);return j===-1?_.url.substring(i):_.url.substring(i,j)}`
+                `{let i=${reqURL}.indexOf('${key}',${pathEnd}+1);if(i===-1)return null;`
+                + `i+=${len};const j=${reqURL}.indexOf('&',i);return j===-1?${reqURL}.substring(i):${reqURL}.substring(i,j)}`
             ) : (
-                `{var j=_.url.indexOf('${key}',_._pathEnd+1);`
+                `{let j=${reqURL}.indexOf('${key}',${pathEnd}+1);`
                 + `if(j===-1)return null;`
-                + `let r=new Array(${maxValues}),i=0,e;`
+                + `let r=new Array(${maxValues}),i=0,{url}=${req},e;`
                 + `do{`
-                + `j+=${len};e=_.url.indexOf('&',j);`
-                + `if(e===-1){r[i]=_.url.substring(j);return r}`
-                + `r[i]=_.url.substring(j,e);`
+                + `j+=${len};e=url.indexOf('&',j);`
+                + `if(e===-1){r[i]=url.substring(j);return r}`
+                + `r[i]=url.substring(j,e);`
                 + `if(i===${maxValues - 1})return r;`
-                + `j=_.url.indexOf('${key}',e+1);`
+                + `j=url.indexOf('${key}',e+1);`
                 + `if(j===-1)return r;++i`
                 + `}while(true)}`
             );
+
+        console.log(body)
 
         return Function(body)();
     }
@@ -78,7 +80,7 @@ export namespace qs {
     /**
      * Get the query string from a Stric context object. The query string does not contain `?`
      */
-    export declare function string(c: { url: string, _pathEnd?: number }): string;
+    export declare function string(c: Context): string;
 }
 
 qs.parse = input => {
@@ -142,8 +144,8 @@ qs.parse = input => {
     return result;
 }
 
-// Get the query string
-qs.string = c => c._pathEnd === -1 ? '' : c.url.substring(c._pathEnd + 1);
+// @ts-ignore Get the query string
+qs.string = c => c._pathEnd === -1 ? '' : c.req.url.substring(c._pathEnd + 1);
 
 // Alias
 export const query = qs.parse;

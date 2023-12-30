@@ -19,7 +19,6 @@ const isValidVar = (ch: number) => {
 export namespace template {
     const parentObjName = 'o', startChars = '$(', endChar = ')', quote = '`';
 
-
     export type Infer<T extends string> = T extends `${infer Start}${typeof startChars}${infer N}${typeof endChar}${infer Rest}`
         ? (
             Trim<N> extends `${infer K}:${infer T}`
@@ -32,7 +31,7 @@ export namespace template {
 
         while (st !== -1) {
             // Push the previous template string
-            body += quote + html.substring(prv, st) + quote + '+';
+            body += quote + html.substring(prv, st) + quote + ',';
 
             st += startChars.length;
             ed = st;
@@ -59,7 +58,7 @@ export namespace template {
             }
 
             // Push the name of the var
-            body += paramName + '+';
+            body += paramName + ',';
 
             // Next name
             prv = ed + endChar.length;
@@ -72,6 +71,6 @@ export namespace template {
         else
             body += quote + html.substring(prv) + quote;
 
-        return Function(`return ${parentObjName}=>${body}`)();
+        return Function(`return ${parentObjName}=>[${body}].join('')`)();
     }
 }

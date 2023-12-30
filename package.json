@@ -6,9 +6,10 @@
   },
   "main": "index.js",
   "devDependencies": {
+    "@stricjs/app": "^1.0.0-rc.4",
     "bun-types": "latest",
-    "typescript": "^4.9.4",
-    "mitata": "^0.1.6"
+    "mitata": "^0.1.6",
+    "typescript": "^4.9.4"
   },
   "description": "Utilities for parsing and handling requests",
   "type": "module",
