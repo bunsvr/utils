@@ -112,11 +112,8 @@ class CORS {
         let body = `return r=>{var c=${JSON.stringify(this.headers)};switch(r){`;
 
         // Get the case statement check 
-        let i = 1;
-        while (i < origins.length) {
+        for (let i = 1, len = origins.length; i < len; ++i)
             body += `case'${origins[i]}':`;
-            ++i;
-        }
 
         body += `c['Access-Control-Allow-Origin']=r;break}return c}`;
 

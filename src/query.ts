@@ -92,7 +92,7 @@ export namespace qs {
 }
 
 qs.parse = input => {
-    var result = new EmptyObject, key = '', value = '', startingIndex = -1, //
+    let result = new EmptyObject, key = '', value = '', startingIndex = -1, //
         equalityIndex = -1, shouldDecodeKey = false, shouldDecodeValue = false, //
         keyHasPlus = false, valueHasPlus = false, hasBothKeyValuePair = false, i = 0;
     // Have a boundary of input.length + 1 to access last pair inside the loop.

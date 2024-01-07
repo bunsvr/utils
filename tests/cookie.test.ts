@@ -2,14 +2,14 @@ import { expect, test } from 'bun:test';
 import { cs } from '..';
 
 test('Cookie builder', () => {
-    const Cookie = new cs.Builder({
+    const cookie = new cs.Builder({
         secure: true,
         sameSite: 'Strict'
     }).init();
 
-    const cookie = new Cookie()
+    const res = cookie()
         .set('a', 'b')
         .set('b', true);
 
-    expect(cookie.get()).toBe('Secure;SameSite=Strict;a=b;b');
+    expect(res.get()).toBe('Secure;SameSite=Strict;a=b;b');
 });

@@ -1,3 +1,5 @@
+import escapeStr from "./internals/escapeStr";
+
 const htmlOpts: ResponseInit = {
     headers: { 'Content-Type': 'text/html' }
 };
@@ -82,7 +84,7 @@ export const leftPad = (str: string, cnt: number, literal: string): string => {
  * Extend an object. Faster than spread and `Object.assign`
  */
 export const extend = (target: any, source: any): void => {
-    var k: any;
+    let k: string;
     for (k in source) target[k] = source[k];
 }
 
@@ -96,13 +98,13 @@ export function createExtendFunction(b: any, sourceName: string, targetName: str
 
     for (key in b) {
         value = b[key];
-        if (value === undefined) continue;
+        if (!value) continue;
 
-        key = isVariable.test(key) ? '.' + key : `['${key}']`;
+        key = isVariable.test(key) ? '.' + key : `['${escapeStr(key)}']`;
         fn += targetName + key + '=';
 
         if (typeof value !== 'object' && typeof value !== 'function') {
-            if (typeof value === 'string') fn += `'${value}'`;
+            if (typeof value === 'string') fn += `'${escapeStr(value)}'`;
             else fn += String(value);
         } else fn += sourceName + key;
 
@@ -116,9 +118,8 @@ export function createExtendFunction(b: any, sourceName: string, targetName: str
  * Create an extend function for an object.
  * This optimization only works with object that has string keys
  */
-export function createExtend(b: any): (a: any) => void {
-    return Function('b', `return a=>{${createExtendFunction(b, 'b', 'a')}}`)(b);
-}
+export const createExtend = (b: any): (a: any) => void =>
+    Function('b', `return a=>{${createExtendFunction(b, 'b', 'a')}}`)(b);
 
 /**
  * Return a function to create a copy of an object
@@ -148,13 +149,11 @@ export const escapeHTML = globalThis.Bun ? Bun.escapeHTML : (str: string) => str
  * Tagged HTML template
  */
 export const html = (strings: TemplateStringsArray, ...args: any[]) => {
-    let index = 0, parts = [];
+    const parts = [], { length } = args;
 
-    while (index < args.length) {
+    for (let index = 0; index < length; ++index)
         parts.push(strings[index], escapeHTML(args[index]));
-        ++index;
-    }
 
-    parts.push(strings[index]);
+    parts.push(strings[length]);
     return parts.join('');
 }

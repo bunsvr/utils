@@ -54,14 +54,8 @@ export namespace cs {
         }
 
         // Create another instance
-        init(): new () => Cookie {
-            function C() { };
-            C.prototype = Object.create(null);
-            C.prototype.parts = this.parts;
-            C.prototype.set = setFn;
-            C.prototype.get = getFn;
-            // @ts-ignore
-            return C;
+        init(): () => Cookie {
+            return Function('get', 'set', `return ()=>({parts:${JSON.stringify(this.parts)},get,set})`)(getFn, setFn)
         }
     }
 }
