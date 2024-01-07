@@ -22,7 +22,10 @@ const strPrototypeAt = String.prototype.at,
     pathEnd = ctx + '._pathEnd',
     req = ctx + '.req',
     reqURL = req + '.url';
-// Arrow functions run faster
+
+/**
+ * Query string utilities
+ */
 export namespace qs {
     /**
      * Parse a query. This function is faster than native `URLSearchParams` for simple queries
