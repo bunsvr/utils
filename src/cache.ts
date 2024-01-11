@@ -1,7 +1,5 @@
 import PropsBuilder from './internals/builder';
 
-const defaultValue = 'public,max-age=604800';
-
 // Builder setup
 const builder = new PropsBuilder<boolean>()
     .put<'maxAge', number>('maxAge', 'max-age')
@@ -36,7 +34,7 @@ export namespace cache {
     export declare function tag(data: string | TypedArray | DataView | ArrayBuffer | SharedArrayBuffer): string;
 }
 
-cache.control = opts => opts ? builder.build(opts).join('') : defaultValue;
+cache.control = opts => opts ? builder.build(opts).join('') : 'public,max-age=604800';
 
 // Basically ETag hashing 
 {

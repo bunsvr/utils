@@ -2,14 +2,13 @@ import { resolve } from 'path';
 import { statSync } from 'fs';
 import escapeStr from './internals/escapeStr';
 
-
 export namespace stream {
     export type Data = string | BufferSource;
 
     /**
-     * Create a direct ReadableStream based on an async iterator
+     * Create a direct ReadableStream based on an async iterable object
      */
-    export function iter<T extends Data>(
+    export function iterable<T extends Data>(
         it: AsyncIterable<T>,
         cancel?: UnderlyingSourceCancelCallback
     ): ReadableStream {

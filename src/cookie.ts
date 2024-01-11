@@ -1,7 +1,7 @@
 import PropsBuilder from './internals/builder';
 
 // Set up the schema
-const builder = new PropsBuilder()
+const propsBuilder = new PropsBuilder()
     .put<'domain', string>('domain', 'Domain')
     .put<'expires', Date>('expires', 'Expires')
     .put('httpOnly', 'HttpOnly')
@@ -11,13 +11,16 @@ const builder = new PropsBuilder()
     .put('secure', 'Secure')
     .put<'sameSite', 'Strict' | 'Lax' | 'None'>('sameSite', 'SameSite');
 
-builder.separator = { kv: '=', end: ';', multiValue: ' ' };
+propsBuilder.separator = { kv: '=', end: ';', multiValue: ' ' };
 
-type OptionsInfer = typeof builder.infer;
+type OptionsInfer = typeof propsBuilder.infer;
 
+/**
+ * Cookie string namespace
+ */
 export namespace cs {
     /**
-     * Represent a cokie value
+     * Represent a cookie value
      */
     export type Value = string | true;
 
@@ -28,47 +31,25 @@ export namespace cs {
 
     export interface Cookie {
         /**
-         * Current cookie string 
+         * Set cookie props
          */
-        parts: string[];
+        set: Record<string, Value>;
 
         /**
-         * Add another cookie key value pair
+         * Get the cookie value
          */
-        set(key: string, value: string | true): this;
-
-        /**
-         * Returns the cookie string
-         */
-        get(): string;
+        readonly value: string;
     }
 
     /**
      * Cookie value builder
      */
-    export class Builder {
-        parts: string[];
-
-        constructor(options: cs.Options = {}) {
-            this.parts = builder.build(options);
-        }
-
-        // Create another instance
-        init(): () => Cookie {
-            return Function('get', 'set', `return ()=>({parts:${JSON.stringify(this.parts)},get,set})`)(getFn, setFn)
-        }
+    export function builder(options: cs.Options = {}): () => Cookie {
+        const getParts = `const p=${JSON.stringify(
+            propsBuilder.build(options)
+        )};`
+            + "for(var k in set){p.push(';',k);if(set[k]!==true)p.push('=',set[k])};"
+            + "return p.join('')";
+        return Function(`return ()=>{const set={};return{set,get value(){${getParts}}}}`)();
     }
-}
-
-// Functions for the proto
-function setFn(this: cs.Cookie, key: string, value: string | true) {
-    // The end separator was pop out
-    this.parts.push(';', key);
-    if (value !== true) this.parts.push('=', value);
-
-    return this;
-}
-
-function getFn(this: cs.Cookie) {
-    return this.parts.join('');
 }

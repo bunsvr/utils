@@ -81,7 +81,7 @@ export const leftPad = (str: string, cnt: number, literal: string): string => {
 }
 
 /**
- * Extend an object. Faster than spread and `Object.assign`
+ * Extend an object. Faster than spread and `Object.assign` but works only for string keys
  */
 export const extend = (target: any, source: any): void => {
     let k: string;

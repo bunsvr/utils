@@ -1,4 +1,5 @@
-import { createCopy, EmptyObject } from "./helpers";
+import type { Context } from '@stricjs/app';
+import { EmptyObject, createExtend } from './helpers';
 
 /**
  * All request methods
@@ -75,6 +76,7 @@ class CORS {
     constructor(public readonly options: CORS.Options = {}) {
         const headers: CORS.Headers = new EmptyObject;
 
+        // All static options
         if (options.maxAge)
             headers['Access-Control-Max-Age'] = String(options.maxAge);
         if (options.allowCredentials)
@@ -91,54 +93,87 @@ class CORS {
         if (options.allowMethods)
             setHeader(headers, 'Access-Control-Allow-Methods', options.allowMethods);
 
+        // Request origin check
+        const origins = this.options.allowOrigins;
+        if (!origins || origins.length === 0 || origins === '*')
+            this.static = true;
+        else {
+            const originIsStr = typeof origins === 'string',
+                isStatic = originIsStr || origins.length === 1;
+
+            headers.Vary = 'Origin';
+            headers['Access-Control-Allow-Origin'] = originIsStr ? origins : origins[0];
+
+            this.static = isStatic;
+            const assign = this.assign = createExtend(headers);
+
+            // Single or no origin
+            if (isStatic) {
+                this.assign = createExtend(headers);
+
+                this.validate = headers => {
+                    assign(headers);
+                    return headers;
+                }
+
+                this.set = ctx => assign(ctx.headers);
+                this.write = Function(`return c=>{c.headers=${JSON.stringify(headers)}}`)();
+            }
+
+            // Multiple origins
+            else {
+                // Origin check using map
+                const originMap = {};
+                for (let i = 0, len = origins.length; i < len; ++i)
+                    originMap[origins[i]] = null;
+
+                // Assign every props
+                const validate = (this.validate = (headers, requestOrigin) => {
+                    assign(headers);
+                    if (typeof originMap[requestOrigin] !== 'undefined')
+                        headers['Access-Control-Allow-Origin'] = requestOrigin;
+                });
+
+                this.set = ctx => validate(ctx.headers as {}, ctx.req.headers.get('Origin'));
+                this.write = Function('m',
+                    `return c=>{c.headers=${JSON.stringify(headers)};`
+                    + `const o=c.req.headers.get('Origin');if(typeof m[o]!=='undefined')c.headers['Access-Control-Allow-Origin']=o}`
+                )(originMap);
+            }
+        }
+
         this.headers = headers;
-        this.head = createCopy(headers);
-
-        // Same function cuz it does not depends on the origin passed in
-        this.static = this.build() === null;
-    }
-
-    // Build the check function
-    build() {
-        const origins = this.options.allowOrigins, originIsStr = typeof origins === 'string';
-        if (!origins || origins.length === 0 || origins === '*') return null;
-
-        this.headers.Vary = 'Origin';
-        this.headers['Access-Control-Allow-Origin'] = originIsStr ? origins : origins[0];
-
-        // Access-Control-Allow-Origin is not needed to be set dynamically in this case
-        if (originIsStr || origins.length === 1) return false;
-
-        let body = `return r=>{var c=${JSON.stringify(this.headers)};switch(r){`;
-
-        // Get the case statement check 
-        for (let i = 1, len = origins.length; i < len; ++i)
-            body += `case'${origins[i]}':`;
-
-        body += `c['Access-Control-Allow-Origin']=r;break}return c}`;
-
-        // Compose functions
-        this.check = Function(body)();
     }
 }
 
+/**
+ * Cross-origin resource sharing headers
+ */
 interface CORS {
     /**
      * Return CORS headers including 'Access-Control-Allow-Origin'
      * @param requestOrigin The origin to check
      * @returns The CORS headers
      */
-    check(requestOrigin: string): CORS.Headers;
+    validate<T extends object>(headers: T, requestOrigin?: string): void;
 
     /**
-     * Return a copy of the headers 
+     * Set CORS headers for context. You may register this as a layer handler
+     * ```js
+     * export const layers = [cors.set];
+     * ```
      */
-    head(): CORS.Headers;
+    set(c: Context): void;
 
     /**
-     * Use this when you cannot determine all headers keys and values
+     * Override `ctx.headers`. Can be used as a layer handler like `cors.set`
      */
-    put(headers: Headers): Headers;
+    write(c: Context): void;
+
+    /**
+     * Assign static headers
+     */
+    assign(headers: object): void;
 }
 
 export { CORS };

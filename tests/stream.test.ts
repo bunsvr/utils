@@ -9,7 +9,7 @@ test('Stream async iterable', async () => {
     }
 
     const msgList = ['Hi', 'there'],
-        s = stream.iter(gen(msgList));
+        s = stream.iterable(gen(msgList));
 
     // This is actually sync
     for await (const chunk of s)
