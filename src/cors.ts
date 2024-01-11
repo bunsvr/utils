@@ -151,9 +151,7 @@ class CORS {
  */
 interface CORS {
     /**
-     * Return CORS headers including 'Access-Control-Allow-Origin'
-     * @param requestOrigin The origin to check
-     * @returns The CORS headers
+     * Set CORS headers
      */
     validate<T extends object>(headers: T, requestOrigin?: string): void;
 
