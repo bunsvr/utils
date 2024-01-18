@@ -1,4 +1,4 @@
-import escapeStr from "./internals/escapeStr";
+import escapeStr from './internals/escapeStr';
 
 const htmlOpts: ResponseInit = {
     headers: { 'Content-Type': 'text/html' }
@@ -14,6 +14,7 @@ export function createHTML(options: ResponseInit): (html: string) => Response;
  */
 export function createHTML(options: ResponseInit, html: string): () => Response;
 export function createHTML(options: ResponseInit, html?: string) {
+    // @ts-ignore
     options.headers ||= {};
     Object.assign(options.headers, htmlOpts);
 
@@ -40,6 +41,7 @@ export function response(serializable: any, options?: ResponseInit): () => Respo
 
             // Automatic response header
             options ||= {};
+            // @ts-ignore
             options.headers ||= {};
             options.headers['Content-Type'] ||= 'application/json';
         } else serializable.toString();
@@ -60,7 +62,7 @@ export function response(serializable: any, options?: ResponseInit): () => Respo
     return Function(...args)(...values);
 }
 
-export type BlobPart = string | Blob | BufferSource;
+export type BlobPart = string | Blob | Buffer;
 export type ResponseBody = ReadableStream<any> | BlobPart | BlobPart[] | FormData | URLSearchParams;
 
 /**
@@ -151,8 +153,8 @@ export const escapeHTML = globalThis.Bun ? Bun.escapeHTML : (str: string) => str
 export const html = (strings: TemplateStringsArray, ...args: any[]) => {
     const parts = [], { length } = args;
 
-    for (let index = 0; index < length; ++index)
-        parts.push(strings[index], escapeHTML(args[index]));
+    for (let idx = 0; idx < length; ++idx)
+        parts.push(strings[idx], escapeHTML(args[idx]));
 
     parts.push(strings[length]);
     return parts.join('');

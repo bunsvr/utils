@@ -1,12 +1,28 @@
 {
     "compilerOptions": {
         "module": "ESNext",
-        "types": ["bun-types"],
+        "lib": [
+            "ESNext"
+        ],
         "esModuleInterop": true,
         "target": "ESNext",
-        "removeComments": false,
-        "skipDefaultLibCheck": true,
-        "moduleResolution": "node"
+        "moduleResolution": "bundler",
+        "moduleDetection": "force",
+        "resolveJsonModule": true,
+        "downlevelIteration": true,
+        "skipLibCheck": true,
+        "allowImportingTsExtensions": true,
+        "forceConsistentCasingInFileNames": true,
+        "allowJs": true,
+        // Declaration generation
+        "declarationDir": "types",
+        "declaration": true,
+        "emitDeclarationOnly": true,
+        "types": [
+            "bun-types"
+        ]
     },
-    "include": ["src"]
+    "include": [
+        "./src"
+    ]
 }

@@ -1,10 +1,14 @@
-import type { Context } from '@stricjs/app';
+import type { Context, Plugin } from '@stricjs/app';
 import { EmptyObject, createExtend } from './helpers';
 
 /**
  * All request methods
  */
-export type RequestMethod = 'ACL' | 'BIND' | 'CHECKOUT' | 'CONNECT' | 'COPY' | 'DELETE' | 'GET' | 'HEAD' | 'LINK' | 'LOCK' | 'M-SEARCH' | 'MERGE' | 'MKACTIVITY' | 'MKCALENDAR' | 'MKCOL' | 'MOVE' | 'NOTIFY' | 'OPTIONS' | 'PATCH' | 'POST' | 'PRI' | 'PROPFIND' | 'PROPPATCH' | 'PURGE' | 'PUT' | 'REBIND' | 'REPORT' | 'SEARCH' | 'SOURCE' | 'SUBSCRIBE' | 'TRACE' | 'UNBIND' | 'UNLINK' | 'UNLOCK' | 'UNSUBSCRIBE';
+export type RequestMethod =
+    'ACL' | 'BIND' | 'CHECKOUT' | 'CONNECT' | 'COPY' | 'DELETE' | 'GET' | 'HEAD' | 'LINK' | 'LOCK' | 'M-SEARCH'
+    | 'MERGE' | 'MKACTIVITY' | 'MKCALENDAR' | 'MKCOL' | 'MOVE' | 'NOTIFY' | 'OPTIONS' | 'PATCH' | 'POST' | 'PRI'
+    | 'PROPFIND' | 'PROPPATCH' | 'PURGE' | 'PUT' | 'REBIND' | 'REPORT' | 'SEARCH' | 'SOURCE' | 'SUBSCRIBE'
+    | 'TRACE' | 'UNBIND' | 'UNLINK' | 'UNLOCK' | 'UNSUBSCRIBE';
 
 /**
  * CORS types
@@ -38,6 +42,10 @@ declare namespace CORS {
          * 'Access-Control-Allow-Headers' header
          */
         allowHeaders?: string | string[];
+        /**
+         * Whether the plugin will append headers
+         */
+        appendHeaders?: boolean;
     }
 
     type HeadersName = 'Access-Control-Max-Age' | 'Access-Control-Allow-Credentials' | 'Access-Control-Allow-Headers'
@@ -105,51 +113,54 @@ class CORS {
             headers['Access-Control-Allow-Origin'] = originIsStr ? origins : origins[0];
 
             this.static = isStatic;
-            const assign = this.assign = createExtend(headers);
+        }
 
-            // Single or no origin
-            if (isStatic) {
-                this.assign = createExtend(headers);
+        const assign = this.assign = createExtend(headers);
 
-                this.validate = headers => {
-                    assign(headers);
-                    return headers;
-                }
-
-                this.set = ctx => assign(ctx.headers);
-                this.write = Function(`return c=>{c.headers=${JSON.stringify(headers)}}`)();
+        // Single or no origin
+        if (this.static) {
+            this.validate = headers => {
+                assign(headers);
+                return headers;
             }
 
-            // Multiple origins
-            else {
-                // Origin check using map
-                const originMap = {};
-                for (let i = 0, len = origins.length; i < len; ++i)
-                    originMap[origins[i]] = null;
+            this.set = ctx => assign(ctx.headers);
+            this.write = Function(`return c=>{c.headers=${JSON.stringify(headers)}}`)();
+        }
 
-                // Assign every props
-                const validate = (this.validate = (headers, requestOrigin) => {
-                    assign(headers);
-                    if (typeof originMap[requestOrigin] !== 'undefined')
-                        headers['Access-Control-Allow-Origin'] = requestOrigin;
-                });
+        // Multiple origins
+        else {
+            // Origin check using map
+            const originMap = {};
+            for (let i = 0, len = origins.length; i < len; ++i)
+                originMap[origins[i]] = null;
 
-                this.set = ctx => validate(ctx.headers as {}, ctx.req.headers.get('Origin'));
-                this.write = Function('m',
-                    `return c=>{c.headers=${JSON.stringify(headers)};`
-                    + `const o=c.req.headers.get('Origin');if(typeof m[o]!=='undefined')c.headers['Access-Control-Allow-Origin']=o}`
-                )(originMap);
-            }
+            // Assign every props
+            const validate = (this.validate = (headers, requestOrigin) => {
+                assign(headers);
+                if (originMap[requestOrigin] === null)
+                    headers['Access-Control-Allow-Origin'] = requestOrigin;
+            });
+
+            this.set = ctx => validate(ctx.headers as {}, ctx.req.headers.get('Origin'));
+            this.write = Function('m',
+                `return c=>{c.headers=${JSON.stringify(headers)};`
+                + `const o=c.req.headers.get('Origin');if(m[o]===null)c.headers['Access-Control-Allow-Origin']=o}`
+            )(originMap);
         }
 
         this.headers = headers;
+
+        // Set plugin
+        const f = this.options.appendHeaders ? this.set : this.write;
+        this.plugin = routes => routes.layer(f).options('/*');
     }
 }
 
 /**
  * Cross-origin resource sharing headers
  */
-interface CORS {
+interface CORS extends Plugin {
     /**
      * Set CORS headers
      */
@@ -175,3 +186,8 @@ interface CORS {
 }
 
 export { CORS };
+
+/**
+ * Default CORS option
+ */
+export const cors = new CORS;

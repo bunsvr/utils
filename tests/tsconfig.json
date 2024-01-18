@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "module": "ESNext",
+        "lib": [
+            "ESNext"
+        ],
+        "esModuleInterop": true,
+        "target": "ESNext",
+        "moduleResolution": "bundler",
+        "moduleDetection": "force",
+        "resolveJsonModule": true,
+        "downlevelIteration": true,
+        "skipLibCheck": true,
+        "allowImportingTsExtensions": true,
+        "forceConsistentCasingInFileNames": true,
+        "allowJs": true
+    },
+    "include": [
+        "."
+    ]
+}

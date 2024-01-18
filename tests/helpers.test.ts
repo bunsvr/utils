@@ -17,7 +17,9 @@ test('Left pad', () => {
 test('Extend', () => {
     const a = { a: 1 };
     extend(a, { b: 2 });
-    expect(a).toEqual({ a: 1, b: 2 });
+    expect(a as any).toEqual({
+        a: 1, b: 2
+    });
 });
 
 test('Custom extend', () => {
