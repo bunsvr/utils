@@ -3,7 +3,7 @@ import PropsBuilder from './internals/builder';
 const sep = { kv: ' ', end: ';', multiValue: ' ' };
 
 // Props that ends with 'src' goes here
-const srcBuilder = new PropsBuilder<CSP.Source>()
+const srcBuilder = new PropsBuilder<csp.Source>()
     .put('default', 'default-src')
     .put('child', 'child-src')
     .put('connect', 'connect-src')
@@ -26,7 +26,7 @@ srcBuilder.separator = sep;
 type SrcInfer = typeof srcBuilder.infer;
 
 // Main builder
-const builder = new PropsBuilder<CSP.Source>()
+const builder = new PropsBuilder<csp.Source>()
     .skip('src')
     .put<'sandbox', boolean | `allow-${'downloads' | 'forms' | 'modals' |
         'orientation-lock' | 'pointer-lock' |
@@ -47,7 +47,7 @@ type OptionInfer = typeof builder.infer;
 /**
  * Content security policy namespace
  */
-export namespace CSP {
+export namespace csp {
     /**
      * Sandbox value
      */
